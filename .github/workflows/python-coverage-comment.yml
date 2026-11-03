@@ -77,7 +77,7 @@ jobs:
           github-token: ${{ github.token }}
           run-id: ${{ github.event.workflow_run.id }}
 
-      - name: Verify current commit and add report provenance
+      - name: Verify current commit
         id: current
         if: steps.report.outputs.number != '' && hashFiles('reports/coverage-summary.md') != ''
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -93,11 +93,6 @@ jobs:
               core.info('PR changed while downloading coverage; skipping stale report.');
               return;
             }
-            const fs = require('node:fs');
-            fs.appendFileSync('reports/coverage-summary.md',
-              `\n\n${run.conclusion === 'success' ? '✅' : '❌'} Test workflow: **${run.conclusion}**. ` +
-              `${run.conclusion === 'success' ? '' : 'Coverage may be incomplete. '}\n\n` +
-              `Commit: \`${run.head_sha}\` · [Test run](${run.html_url})\n`);
             core.setOutput('publish', 'true');
 
       - name: Update coverage pull request comment

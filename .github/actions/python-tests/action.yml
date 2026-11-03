@@ -59,12 +59,7 @@ runs:
     - name: Render coverage report
       if: always()
       shell: bash
-      run: |
-        set -euo pipefail
-        python3 scripts/coverage_summary.py \
-          --xml logs/coverage.xml \
-          --output logs/coverage-summary.md \
-          --job-summary "$GITHUB_STEP_SUMMARY"
+      run: python3 scripts/coverage_summary.py
 
     - name: Run test teardown
       if: always()
