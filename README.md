@@ -189,6 +189,34 @@ Create an API key in the Dependency-Track UI and export it as `SBOM_API_KEY`, or
 - [Secrets Manager](CONTRIBUTING.md#9-secrets-manager)
   > Manage and secure sensitive information such as API keys, passwords, and certificates.
 
+### Code coverage
+
+[![Python Tests](https://github.com/sentenz/sbom-cli/actions/workflows/python-tests.yml/badge.svg?branch=main)](https://github.com/sentenz/sbom-cli/actions/workflows/python-tests.yml)
+
+The Python CI workflow runs \`pytest-cov\` once and publishes **line and branch
+coverage** in the GitHub Actions job summary. For same-repository pull requests,
+a persistent coverage comment is updated on each run, following the approach in
+[percent's Go test workflow](https://github.com/sentenz/percent/blob/main/.github/workflows/go-tests.yml).
+
+The workflow uploads \`logs/coverage.xml\`, the HTML report under
+\`logs/coverage/\`, JUnit results, and \`logs/coverage-summary.md\`
+as \`python-tests-artifacts\` (retained for 14 days).
+
+External fork pull requests receive read-only job summaries and artifacts, but
+not an automated PR comment. The test job has no pull-request write permission;
+a separate, non-checkout job publishes comments only for same-repository PRs.
+
+To generate a local report, run:
+
+\`\`\`bash
+make test
+python3 scripts/coverage_summary.py --xml logs/coverage.xml --output logs/coverage-summary.md
+\`\`\`
+
+The badge above reports **CI status**, not a numerical coverage percentage. A
+persistent percentage badge is intentionally omitted until a trusted
+default-branch coverage publishing service or endpoint is configured.
+
 ## 4. Troubleshoot
 
 - [File Permission Issues](docs/troubleshoot.md#11-file-permission-issues)

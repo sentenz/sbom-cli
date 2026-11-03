@@ -139,7 +139,7 @@ TEST_VENV ?= .venv
 TEST_PYTEST ?= $(TEST_VENV)/bin/pytest
 TEST_REPORT_DIR ?= logs
 TEST_PYTEST_TARGETS ?= $(foreach dir,tests/unit tests/fuzz tests/integration tests/e2e,$(if $(wildcard $(dir)),$(dir)))
-TEST_PYTEST_COVERAGE_ARGS ?= --junitxml=$(TEST_REPORT_DIR)/junit.xml --cov=sbom --cov-report=term-missing --cov-report=html:$(TEST_REPORT_DIR)/coverage --cov-report=xml:$(TEST_REPORT_DIR)/coverage.xml
+TEST_PYTEST_COVERAGE_ARGS ?= --junitxml=$(TEST_REPORT_DIR)/junit.xml --cov=sbom --cov-branch --cov-report=term-missing --cov-report=html:$(TEST_REPORT_DIR)/coverage --cov-report=xml:$(TEST_REPORT_DIR)/coverage.xml
 
 ## Provision the venv, install the package (editable) with dev tooling
 test-setup: setup
