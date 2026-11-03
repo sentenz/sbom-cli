@@ -7,19 +7,31 @@ on:
   schedule:
     - cron: "0 19 * * 0"
 
+permissions: {}
+
+concurrency:
+  group: renovate-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   renovate:
     name: Renovate Action
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
-
+    timeout-minutes: 30
     permissions:
       contents: read
-
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - name: Renovate
+      - name: Run Renovate
         uses: sentenz/actions/renovate@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
         with:
           token: ${{ secrets.RENOVATE_TOKEN }}
+          autodiscover: "false"
+          log-level: info
+        env:
+          RENOVATE_CONFIG_VALIDATION_ERROR: "true"

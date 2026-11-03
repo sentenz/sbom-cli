@@ -10,6 +10,12 @@ on:
       - beta
       - alpha
 
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   semantic-release:
     name: Semantic-Release Action
@@ -19,11 +25,15 @@ jobs:
       issues: write
       pull-requests: write
       id-token: write
+    outputs:
+      new-release-published: ${{ steps.release.outputs.new-release-published }}
+      new-release-version: ${{ steps.release.outputs.new-release-version }}
     steps:
       - name: Checkout (full history)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          # Retained: the existing release config uses @semantic-release/git.
           persist-credentials: true
 
       - name: Run Semantic Release
@@ -34,31 +44,12 @@ jobs:
           semantic-version: "latest"
           tag-format: "v${version}"
 
-      - name: Run SBOM Generation (CycloneDX)
-        if: steps.release.outputs.new-release-published == 'true'
-        uses: sentenz/actions/trivy@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
-        with:
-          scan-type: sbom-generate
-          scan-target: "."
-          format: cyclonedx
-          output: sbom.cdx.json
-
-      - name: Run SBOM Generation (SPDX)
-        if: steps.release.outputs.new-release-published == 'true'
-        uses: sentenz/actions/trivy@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
-        with:
-          scan-type: sbom-generate
-          scan-target: "."
-          format: spdx-json
-          output: sbom.spdx.json
-
-      - name: Publish SBOM artifacts
-        if: steps.release.outputs.new-release-published == 'true'
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
-        with:
-          tag_name: v${{ steps.release.outputs.new-release-version }}
-          files: |
-            sbom.cdx.json
-            sbom.spdx.json
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  sbom:
+    name: Generate and publish release SBOMs
+    needs: semantic-release
+    if: needs.semantic-release.outputs.new-release-published == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/sbom.yml
+    with:
+      version: v${{ needs.semantic-release.outputs.new-release-version }}

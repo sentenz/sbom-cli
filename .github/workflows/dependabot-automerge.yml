@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 name: Dependabot Auto-Merge
 
 on:
@@ -7,25 +9,25 @@ on:
       - synchronize
       - reopened
 
-permissions:
-  actions: read
-  contents: write
-  pull-requests: write
+permissions: {}
 
 concurrency:
-  group: dependabot-automerge-${{ github.event.pull_request.number }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
   auto-merge:
-    name: Auto-approve and auto-merge Dependabot Patch and Minor Updates
+    name: Auto-merge Dependabot patch updates
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'sentenz/skills'
-    env:
-      PR_URL: ${{ github.event.pull_request.html_url }}
-      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 5
+    # Verify the PR's origin, not only the actor that triggered this run.
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.commits == 1
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Get Dependabot metadata
         id: metadata
@@ -33,65 +35,44 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Wait for security checks
-        if: steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor'
-        shell: bash
+      - name: Approve and enable auto-merge for the verified patch update
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
 
-          wait_for_workflow() {
-            local workflow="$1"
-            local result status conclusion
+          # Respect repository policy before attempting approval or auto-merge.
+          auto_merge_enabled="$(gh api "repos/${GH_REPO}" --jq '.allow_auto_merge')"
+          if [[ "${auto_merge_enabled}" == "false" ]]; then
+            echo "::notice::Auto-merge is disabled for this repository; skipping approval and auto-merge."
+            exit 0
+          elif [[ "${auto_merge_enabled}" != "true" ]]; then
+            echo "::error::Unable to determine the repository auto-merge policy."
+            exit 1
+          fi
 
-            for attempt in {1..90}; do
-              result="$(
-                gh run list \
-                  --repo "$GITHUB_REPOSITORY" \
-                  --workflow "$workflow" \
-                  --commit "$HEAD_SHA" \
-                  --event pull_request \
-                  --limit 1 \
-                  --json status,conclusion \
-                  --jq '.[0] | "\(.status)|\(.conclusion // "")"'
-              )"
+          # fetch-metadata verifies the first commit; require it to be the entire PR.
+          current_pr="$(gh api "repos/${GH_REPO}/pulls/${PR_NUMBER}")"
+          if ! jq -e --arg sha "${PR_HEAD_SHA}" \
+            '.state == "open" and .commits == 1 and .head.sha == $sha' \
+            <<< "${current_pr}" > /dev/null; then
+            echo "::notice::PR changed after this run started; skipping approval and auto-merge."
+            exit 0
+          fi
 
-              if [[ -z "$result" ]]; then
-                echo "Waiting for $workflow to start ($attempt/90)"
-              else
-                status="${result%%|*}"
-                conclusion="${result#*|}"
+          verified="$(gh api "repos/${GH_REPO}/commits/${PR_HEAD_SHA}" \
+            --jq '.author.login == "dependabot[bot]" and .commit.verification.verified')"
+          if [[ "${verified}" != "true" ]]; then
+            echo "::error::The PR head is not a verified Dependabot commit."
+            exit 1
+          fi
 
-                if [[ "$status" == "completed" ]]; then
-                  if [[ "$conclusion" == "success" ]]; then
-                    echo "$workflow completed successfully"
-                    return 0
-                  fi
-
-                  echo "::error::$workflow completed with conclusion: $conclusion"
-                  return 1
-                fi
-
-                echo "Waiting for $workflow to complete; status=$status ($attempt/90)"
-              fi
-
-              sleep 10
-            done
-
-            echo "::error::Timed out waiting for $workflow on $HEAD_SHA"
-            return 1
-          }
-
-          wait_for_workflow semgrep.yml
-          wait_for_workflow trivy.yml
-
-      - name: Auto-approve Patch and Minor Updates
-        if: steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor'
-        run: |
-          gh pr review --approve "$PR_URL"
-          echo "Auto-approved patch/minor update PR #${{ github.event.pull_request.number }}"
-
-      - name: Enable Auto-merge for Patch and Minor Updates
-        if: steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor'
-        run: |
-          gh pr merge --auto --squash "$PR_URL"
-          echo "Enabled auto-merge for patch/minor update PR #${{ github.event.pull_request.number }}"
+          # Bind approval and merge to the reviewed commit, even if the PR changes again.
+          gh api --method POST "repos/${GH_REPO}/pulls/${PR_NUMBER}/reviews" \
+            -f event=APPROVE -f commit_id="${PR_HEAD_SHA}" > /dev/null
+          gh pr merge --auto --squash --match-head-commit "${PR_HEAD_SHA}" "${PR_NUMBER}"
+          echo "Approved and enabled auto-merge for patch update PR #${PR_NUMBER}"

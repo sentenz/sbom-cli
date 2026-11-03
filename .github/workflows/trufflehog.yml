@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: Apache-2.0
+
+name: TruffleHog
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  trufflehog:
+    name: TruffleHog Secret Scanning
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Scan for secrets
+        uses: sentenz/actions/trufflehog@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
+        with:
+          path: ./

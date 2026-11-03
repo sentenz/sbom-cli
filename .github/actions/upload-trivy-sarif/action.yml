@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
-name: Upload Trivy SARIF
-description: Preserve Trivy reports and upload to GitHub Security when code scanning is enabled.
+name: Upload SARIF
+description: Preserve SARIF reports and upload to GitHub Security when code scanning is enabled.
 
 inputs:
   sarif-file:
@@ -36,7 +36,7 @@ runs:
         elif grep -Fq "Code scanning is not enabled for this repository" "$error_file" ||
              grep -Fq "Advanced Security must be enabled for this repository to use code scanning" "$error_file"; then
           echo "enabled=false" >> "$GITHUB_OUTPUT"
-          echo "::warning::Code scanning is disabled for this repository. The Trivy SARIF report is available in the workflow artifacts."
+          echo "::warning::Code scanning is disabled for this repository. The SARIF report is available in the workflow artifacts."
         else
           cat "$error_file" >&2
           exit 1
