@@ -53,3 +53,15 @@ jobs:
     uses: ./.github/workflows/sbom.yml
     with:
       version: v${{ needs.semantic-release.outputs.new-release-version }}
+
+  docker:
+    name: Build and publish release container image
+    needs: semantic-release
+    if: needs.semantic-release.outputs.new-release-published == 'true'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/docker.yml
+    with:
+      publish: true
+      version: v${{ needs.semantic-release.outputs.new-release-version }}
