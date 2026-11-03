@@ -34,13 +34,16 @@ class TestClientInit:
         assert client.verify_ssl is True
         assert client.headers[constants.API_KEY_HEADER] == "k"
 
-    def test_empty_api_url_raises(self) -> None:
+    @pytest.mark.parametrize(
+        "api_url,api_key",
+        [
+            pytest.param("", "k", id="missing-api-url"),
+            pytest.param("https://dt.example.com", "", id="missing-api-key"),
+        ],
+    )
+    def test_missing_required_constructor_values_raise(self, api_url, api_key) -> None:
         with pytest.raises(exceptions.ValidationError):
-            Client(api_url="", api_key="k")
-
-    def test_empty_api_key_raises(self) -> None:
-        with pytest.raises(exceptions.ValidationError):
-            Client(api_url="https://dt.example.com", api_key="")
+            Client(api_url=api_url, api_key=api_key)
 
     def test_custom_timeout_and_verify_ssl(self, make_client) -> None:
         client = make_client(verify_ssl=False, timeout=5.5)
@@ -166,10 +169,26 @@ class TestUploadSbom:
         with pytest.raises(exceptions.ValidationError):
             client.upload_sbom(bom_file="/no/such/file.cdx.json")
 
-    def test_auto_create_requires_name_and_version(self, make_client, bom_file) -> None:
+    @pytest.mark.parametrize(
+        "project_name,project_version",
+        [
+            pytest.param("SBOM", None, id="missing-version"),
+            pytest.param(None, "1.0.0", id="missing-name"),
+            pytest.param("", "1.0.0", id="empty-name"),
+            pytest.param("SBOM", "", id="empty-version"),
+        ],
+    )
+    def test_auto_create_requires_name_and_version(
+        self, make_client, bom_file, project_name, project_version
+    ) -> None:
         client = make_client()
         with pytest.raises(exceptions.ValidationError):
-            client.upload_sbom(bom_file=bom_file, auto_create=True, project_name="SBOM")
+            client.upload_sbom(
+                bom_file=bom_file,
+                auto_create=True,
+                project_name=project_name,
+                project_version=project_version,
+            )
 
     def test_upload_sends_expected_form_fields(self, make_client, make_session, make_response, bom_file) -> None:
         # Arrange
@@ -264,12 +283,17 @@ class TestDeleteProject:
 
 
 class TestFindProject:
-    def test_empty_name_or_version_raises(self, make_client) -> None:
+    @pytest.mark.parametrize(
+        "name,version",
+        [
+            pytest.param("", "1.0", id="missing-name"),
+            pytest.param("SBOM", "", id="missing-version"),
+        ],
+    )
+    def test_empty_name_or_version_raises(self, make_client, name, version) -> None:
         client = make_client()
         with pytest.raises(exceptions.ValidationError):
-            client.find_project(name="", version="1.0")
-        with pytest.raises(exceptions.ValidationError):
-            client.find_project(name="SBOM", version="")
+            client.find_project(name=name, version=version)
 
     def test_returns_first_match(self, make_client, make_session, make_response) -> None:
         projects = [{"uuid": "u1", "name": "SBOM"}, {"uuid": "u2", "name": "SBOM"}]
@@ -279,12 +303,18 @@ class TestFindProject:
         assert got == {"uuid": "u1", "name": "SBOM"}
         assert session.last_call["params"] == {"name": "SBOM", "version": "4.13.4"}
 
-    def test_returns_none_when_no_match(self, make_client, make_session, make_response) -> None:
-        session = make_session(response=make_response(200, []))
-        client = make_client(session=session)
-        assert client.find_project(name="SBOM", version="4.13.4") is None
-
-    def test_returns_none_when_not_a_list(self, make_client, make_session, make_response) -> None:
-        session = make_session(response=make_response(200, {}))
+    @pytest.mark.parametrize(
+        "projects",
+        [
+            pytest.param([], id="empty-list"),
+            pytest.param({}, id="empty-object"),
+            pytest.param({"uuid": "u1"}, id="non-list-response"),
+            pytest.param("", id="empty-string-response"),
+        ],
+    )
+    def test_returns_none_without_project_list(
+        self, make_client, make_session, make_response, projects
+    ) -> None:
+        session = make_session(response=make_response(200, projects))
         client = make_client(session=session)
         assert client.find_project(name="SBOM", version="4.13.4") is None
