@@ -15,6 +15,7 @@ jobs:
     name: Trivy Action - Filesystem Scan
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: read
       security-events: write
     steps:
@@ -22,7 +23,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Run Trivy Filesystem Scan
-        uses: sentenz/actions/trivy@7eb0decd5ee41c0ef933860135d8033a8bdf24b7 # 1.5.4
+        uses: sentenz/actions/trivy@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
         with:
           scan-type: fs
           scan-target: "."
@@ -31,15 +32,17 @@ jobs:
 
       - name: Upload results to GitHub Security
         if: always()
-        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        uses: ./.github/actions/upload-trivy-sarif
         with:
-          sarif_file: trivy-results.sarif
+          sarif-file: trivy-results.sarif
+          artifact-name: trivy-filesystem-sarif
         continue-on-error: false
 
   trivy-config-scan:
     name: Trivy Action - Configuration Scan
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: read
       security-events: write
     steps:
@@ -47,7 +50,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Run Trivy Config Scan
-        uses: sentenz/actions/trivy@7eb0decd5ee41c0ef933860135d8033a8bdf24b7 # 1.5.4
+        uses: sentenz/actions/trivy@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
         with:
           scan-type: config
           scan-target: "."
@@ -57,9 +60,10 @@ jobs:
 
       - name: Upload Trivy Config Scan
         if: always()
-        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        uses: ./.github/actions/upload-trivy-sarif
         with:
-          sarif_file: trivy-iac.sarif
+          sarif-file: trivy-iac.sarif
+          artifact-name: trivy-config-sarif
         continue-on-error: false
 
   trivy-sbom-generation:
@@ -72,7 +76,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Run SBOM Generation (CycloneDX)
-        uses: sentenz/actions/trivy@7eb0decd5ee41c0ef933860135d8033a8bdf24b7 # 1.5.4
+        uses: sentenz/actions/trivy@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
         with:
           scan-type: sbom-generate
           scan-target: "."
@@ -80,7 +84,7 @@ jobs:
           output: sbom.cdx.json
 
       - name: Run SBOM Generation (SPDX)
-        uses: sentenz/actions/trivy@7eb0decd5ee41c0ef933860135d8033a8bdf24b7 # 1.5.4
+        uses: sentenz/actions/trivy@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
         with:
           scan-type: sbom-generate
           scan-target: "."
@@ -111,7 +115,7 @@ jobs:
           name: sbom-files
 
       - name: Scan SBOM for vulnerabilities
-        uses: sentenz/actions/trivy@7eb0decd5ee41c0ef933860135d8033a8bdf24b7 # 1.5.4
+        uses: sentenz/actions/trivy@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
         with:
           scan-type: sbom
           scan-target: sbom.cdx.json
@@ -127,7 +131,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Run License Compliance Scan
-        uses: sentenz/actions/trivy@7eb0decd5ee41c0ef933860135d8033a8bdf24b7 # 1.5.4
+        uses: sentenz/actions/trivy@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
         with:
           scan-type: fs
           scan-target: "."
