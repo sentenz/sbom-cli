@@ -104,6 +104,9 @@ AI Agents are automated tools that assist in various development tasks such as c
     - [.github/actions/python-tests/action.yml](.github/actions/python-tests/action.yml)
       > Local composite action for running `make test-setup`, `make test-coverage`, and `make test-teardown`.
 
+    - [fuzz/README.md](fuzz/README.md)
+      > Coverage-guided Atheris target, seed corpus, campaign budgets, and crash replay instructions. `make test-fuzz` continues to run the Hypothesis suite; `make test-fuzz-coverage` runs Atheris.
+
 2. Usage and Instructions
 
     - Tasks

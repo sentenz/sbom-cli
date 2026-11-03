@@ -160,6 +160,20 @@ test-fuzz:
 	$(TEST_PYTEST) tests/fuzz -v
 .PHONY: test-fuzz
 
+FUZZ_PYTHON ?= $(TEST_VENV)/bin/python
+FUZZ_SECONDS ?= 30
+FUZZ_CORPUS_DIR ?= logs/fuzz/corpus/project_lookup
+FUZZ_ARTIFACT_DIR ?= logs/fuzz/artifacts
+
+## Run a bounded Atheris coverage-guided campaign (requires the fuzz extra)
+test-fuzz-coverage:
+	@mkdir -p "$(FUZZ_CORPUS_DIR)" "$(FUZZ_ARTIFACT_DIR)"
+	$(FUZZ_PYTHON) -m fuzz.fuzz_project_lookup \
+		"$(FUZZ_CORPUS_DIR)" fuzz/corpus/project_lookup \
+		-max_total_time=$(FUZZ_SECONDS) -max_len=512 -timeout=5 -rss_limit_mb=1024 \
+		-artifact_prefix="$(FUZZ_ARTIFACT_DIR)/" -print_final_stats=1
+.PHONY: test-fuzz-coverage
+
 ## Run the integration test suite (no-op if empty)
 test-integration:
 	$(TEST_PYTEST) tests/integration -v || [ $$? -eq 5 ]
