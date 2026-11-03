@@ -27,7 +27,7 @@ The [Command Line Interface (CLI)](https://clig.dev/) supports multiple configur
 - [x] Command-Line Flags
 - [x] Environment Variables (Env Vars)
 - [x] Dotenv Files (`.env`)
-- [ ] Config Files (`.sbom.yml`)
+- [x] Config Files (`.sbom.yml`)
 - [x] Default Variables
 
 ### 1.3. Examples and Explanation
@@ -62,7 +62,7 @@ The [Command Line Interface (CLI)](https://clig.dev/) supports multiple configur
   ```env
   SBOM_API_URL=https://api.component-analysis.localhost/
   SBOM_API_KEY=<API_KEY>
-  SBOM_VERIFY_SSL=false
+  SBOM_VERIFY_SSL=true
   SBOM_PARENT_NAME="Project"
   SBOM_PROJECT_NAME="Dependency-Track"
   SBOM_PROJECT_VERSION="4.13.2"
@@ -71,14 +71,32 @@ The [Command Line Interface (CLI)](https://clig.dev/) supports multiple configur
   ```
 
   ```bash
-  # Implicitly Loading (default .env)
-  sbom upload -f sbom.cdx.json
+  # Explicitly load a trusted dotenv file
+  sbom --env-file .env upload -f sbom.cdx.json
   ```
 
   ```bash
-  # Explicitly Loading (specific .env.stage)
-  source .env.stage
-  sbom upload -f sbom.cdx.json
+  # Explicitly load a trusted dotenv file
+  sbom --env-file .env.stage upload -f sbom.cdx.json
+  ```
+
+- Project Configuration (`.sbom.yml`)
+  > Run the CLI from the project root to automatically load its `.sbom.yml`.
+  >
+  > Config files are read in the order: `/etc/sbom/config.yml`, `~/.sbom/config.yml`, then `.sbom.yml`, later files override earlier ones. CLI flags and environment variables override config files. Dotenv loading still requires `--env-file`.
+
+  ```yaml
+  api-url: https://api.example.com
+  api-key: YOUR_API_KEY
+  verify-ssl: true
+  project-name: MyApp
+  project-version: 1.0.0
+  ```
+
+  ```bash
+  cd /path/to/project
+  sbom upload --file sbom.cdx.json
+  sbom delete
   ```
 
 ### 1.4. Table of Comparison
