@@ -36,7 +36,7 @@ jobs:
         with:
           job: python-tests
           artifacts_paths: logs/
-          artifacts_retention_days: "14"
+          artifacts_retention_days: "30"
           allow_failure: "false"
           before_task: make test-setup
           task: make test-coverage

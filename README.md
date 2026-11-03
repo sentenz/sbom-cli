@@ -180,6 +180,19 @@ Create an API key in the Dependency-Track UI and export it as `SBOM_API_KEY`, or
 
 [CONTRIBUTING.md](CONTRIBUTING.md) provides guidance and instructions for contributing to the project.
 
+The [Python Tests workflow](https://github.com/sentenz/sbom-cli/actions/workflows/python-tests.yml)
+runs the existing pytest suite once, including property-based fuzz tests, with line and branch coverage.
+Each run includes overall and per-file coverage in its job summary and retains Cobertura XML
+(`logs/coverage.xml`), HTML (`logs/coverage/`), Markdown (`logs/coverage-summary.md`), and JUnit
+(`logs/junit.xml`) reports in `python-tests-artifacts` for 30 days, including available reports from
+failed tests. The existing `make test-coverage-check` threshold remains 80%.
+
+Pull requests, including forks, receive one coverage comment that is updated for the current commit.
+Comment publishing runs separately without checking out or executing pull request code. Fork comments
+become active once the reporting workflow is present on the default branch. The README badge reports CI status on
+`main`, not a coverage percentage. A persistent default-branch coverage badge is deferred until a coverage
+service or durable badge endpoint is configured; expiring workflow artifacts are not suitable badge sources.
+
 - [AI Agents](CONTRIBUTING.md#1-ai-agents)
   > Automated tools that assist in various development tasks such as code generation, testing, and documentation.
 

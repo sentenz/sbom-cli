@@ -33,10 +33,10 @@ def _rate(value: str | None, attribute: str) -> float:
 
 def _status(rate: float) -> str:
     if rate >= 0.8:
-        return "High"
+        return "🟢 High"
     if rate >= 0.6:
-        return "Moderate"
-    return "Low"
+        return "🟡 Moderate"
+    return "🔴 Low"
 
 
 def _escape_cell(value: str) -> str:
