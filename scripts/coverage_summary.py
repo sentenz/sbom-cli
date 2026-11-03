@@ -110,7 +110,7 @@ def render_coverage(xml: str) -> str:
         )
         for filename, line_rate, branch_rate in sorted(file_rows)[:50]:
             output.append(
-                f"| \`{_escape_cell(filename)}\` | {line_rate} | {branch_rate} |"
+                f"| `{_escape_cell(filename)}` | {line_rate} | {branch_rate} |"
             )
         if len(file_rows) > 50:
             output.append(f"\n_Additional files omitted: {len(file_rows) - 50}._")
@@ -137,7 +137,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.xml.is_file():
         markdown = (
             "## Python code coverage\n\n"
-            "Coverage unavailable: \`logs/coverage.xml\` was not produced. "
+            "Coverage unavailable: `logs/coverage.xml` was not produced. "
             "Inspect the Python test step and attached artifacts.\n"
         )
     else:

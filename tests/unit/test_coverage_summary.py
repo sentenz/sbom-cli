@@ -56,8 +56,8 @@ def test_total_and_per_file_coverage(tmp_path: Path) -> None:
     assert "1 / 2" in markdown
     assert "High" in markdown
     assert "Low" in markdown
-    assert "| \`sbom/client.py\` | 80.0% | 50.0% |" in markdown
-    assert "| \`sbom/config.py\` | 100.0% | n/a |" in markdown
+    assert "| `sbom/client.py` | 80.0% | 50.0% |" in markdown
+    assert "| `sbom/config.py` | 100.0% | n/a |" in markdown
     assert markdown in job_summary
 
 
