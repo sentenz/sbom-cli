@@ -1,0 +1,4 @@
+policy = "tests/policy"
+namespace = "tests.policy"
+no_color = true
+output = "github"
