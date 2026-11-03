@@ -41,10 +41,11 @@ HTTP_METHODS: Final[list[str]] = [
 
 # ─── File & Env Names ──────────────────────────────────────────────
 ENV_FILE: Final[str] = ".env"
-# Do not auto-load configuration from an untrusted working directory.
+# Later files take precedence: system, user, then project working directory.
 CONFIG_FILES: Final[list[str]] = [
-    "~/.sbom/config.yml",
     "/etc/sbom/config.yml",
+    "~/.sbom/config.yml",
+    ".sbom.yml",
 ]
 
 # ─── Miscellaneous ─────────────────────────────────────────────────

@@ -97,8 +97,34 @@ def test_dotenv_requires_explicit_path(monkeypatch, tmp_path, explicit):
     monkeypatch.delenv("SBOM_API_URL", raising=False)
 
 
-def test_working_directory_config_is_not_automatic():
-    assert ".sbom.yml" not in constants.CONFIG_FILES
+@pytest.mark.parametrize("command", ["upload", "delete"])
+@pytest.mark.parametrize("override", [None, "environment", "cli"])
+def test_working_directory_config_loading(monkeypatch, tmp_path, command, override):
+    assert constants.CONFIG_FILES[-1] == ".sbom.yml"
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(constants, "CONFIG_FILES", [".sbom.yml"])
+    for name in ("SBOM_API_URL", "SBOM_API_KEY", "SBOM_VERIFY_SSL"):
+        monkeypatch.delenv(name, raising=False)
+    (tmp_path / ".sbom.yml").write_text(
+        "api-url: https://project.example\n"
+        "api-key: test-key\n"
+        "verify-ssl: true\n",
+        encoding="utf-8",
+    )
+    args = [command]
+    if command == "upload":
+        args += ["--file", "bom.json"]
+    expected_url = "https://project.example"
+    if override in ("environment", "cli"):
+        monkeypatch.setenv("SBOM_API_URL", "https://environment.example")
+        expected_url = "https://environment.example"
+    if override == "cli":
+        args += ["--api-url", "https://cli.example"]
+        expected_url = "https://cli.example"
+    parsed = cli.create_parser().parse_args(args)
+    assert parsed.api_url == expected_url
+    assert parsed.api_key == "test-key"
+    assert parsed.verify_ssl is True
 
 
 @pytest.mark.parametrize("uuid", ["", "../bom", "valid?force=true", None, 123])

@@ -229,7 +229,6 @@ def create_parser() -> configargparse.ArgParser:
     parser = configargparse.ArgParser(
         prog=constants.APP_NAME,
         description=constants.APP_DESCRIPTION,
-        default_config_files=constants.CONFIG_FILES,
         add_config_file_help=True,
     )
     parser.add(
@@ -278,6 +277,7 @@ def create_parser() -> configargparse.ArgParser:
     upload_parser = subparsers.add_parser(
         "upload",
         parents=[parent_parser],
+        default_config_files=constants.CONFIG_FILES,
         add_help=False,
         help="Upload an SBOM file to the server",
     )
@@ -340,6 +340,7 @@ def create_parser() -> configargparse.ArgParser:
     delete_parser = subparsers.add_parser(
         "delete",
         parents=[parent_parser],
+        default_config_files=constants.CONFIG_FILES,
         add_help=False,
         help="Delete a project (and its SBOM) from the server",
     )
