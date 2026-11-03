@@ -106,9 +106,7 @@ def test_working_directory_config_loading(monkeypatch, tmp_path, command, overri
     for name in ("SBOM_API_URL", "SBOM_API_KEY", "SBOM_VERIFY_SSL"):
         monkeypatch.delenv(name, raising=False)
     (tmp_path / ".sbom.yml").write_text(
-        "api-url: https://project.example\n"
-        "api-key: test-key\n"
-        "verify-ssl: true\n",
+        "api-url: https://project.example\n" "api-key: test-key\n" "verify-ssl: true\n",
         encoding="utf-8",
     )
     args = [command]

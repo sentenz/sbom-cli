@@ -82,8 +82,8 @@ The [Command Line Interface (CLI)](https://clig.dev/) supports multiple configur
 
 - Project Configuration (`.sbom.yml`)
   > Run the CLI from the project root to automatically load its `.sbom.yml`.
-  > Paths are relative to the current working directory; parent directories are not searched.
-  > Both upload and delete read flat keys matching their long option names.
+  >
+  > Config files are read in the order: `/etc/sbom/config.yml`, `~/.sbom/config.yml`, then `.sbom.yml`, later files override earlier ones. CLI flags and environment variables override config files. Dotenv loading still requires `--env-file`.
 
   ```yaml
   api-url: https://api.example.com
@@ -98,12 +98,6 @@ The [Command Line Interface (CLI)](https://clig.dev/) supports multiple configur
   sbom upload --file sbom.cdx.json
   sbom delete
   ```
-
-  Config files are read in this order: `/etc/sbom/config.yml`,
-  `~/.sbom/config.yml`, then `.sbom.yml`; later files override earlier ones.
-  CLI flags and environment variables override these files. Dotenv loading
-  still requires `--env-file`. The project configuration is trusted input:
-  its API URL determines where the client sends the API key.
 
 ### 1.4. Table of Comparison
 
