@@ -1,10 +1,4 @@
-"""
-Unit tests for :mod:`sbom.utils.config`.
-
-``load_environment`` wraps ``python-dotenv``'s ``load_dotenv``. Tests use a
-temporary ``.env`` file and clean up any variables they introduce so the suite
-stays independent (FIRST: Independent).
-"""
+"""Contract tests for environment loading with isolated, table-driven cases."""
 
 from __future__ import annotations
 
@@ -15,62 +9,63 @@ import pytest
 from sbom.utils import config
 
 
-@pytest.fixture
-def env_cleanup():
-    """Snapshot and restore the two variables the tests touch."""
-    touched = ["SBOM_TEST_KEY", "SBOM_TEST_OVERRIDE"]
-    saved = {k: os.environ.pop(k, None) for k in touched}
-    yield
-    for k, v in saved.items():
-        if v is None:
-            os.environ.pop(k, None)
-        else:
-            os.environ[k] = v
+@pytest.mark.parametrize(
+    "file_contents,want",
+    [
+        pytest.param("SBOM_TEST_KEY=hello\n", "hello", id="plain-value"),
+        pytest.param("SBOM_TEST_KEY=\n", "", id="empty-value"),
+        pytest.param('SBOM_TEST_KEY="hello world"\n', "hello world", id="quoted-spaces"),
+        pytest.param("SBOM_TEST_KEY=grüße\n", "grüße", id="unicode-value"),
+    ],
+)
+def test_load_environment_reads_valid_values(tmp_path, monkeypatch, file_contents, want) -> None:
+    # Arrange
+    monkeypatch.delenv("SBOM_TEST_KEY", raising=False)
+    env_file = tmp_path / ".env"
+    env_file.write_text(file_contents, encoding="utf-8")
+
+    # Act
+    got = config.load_environment(dotenv_path=env_file)
+
+    # Assert
+    assert got is True
+    assert os.environ["SBOM_TEST_KEY"] == want
 
 
-class TestLoadEnvironment:
-    def test_loads_variables_from_file(self, tmp_path, env_cleanup) -> None:
-        # Arrange
-        env_file = tmp_path / ".env"
-        env_file.write_text("SBOM_TEST_KEY=hello\n", encoding="utf-8")
+@pytest.mark.parametrize(
+    "original,override,want",
+    [
+        pytest.param("original", False, "original", id="preserve-existing"),
+        pytest.param("original", True, "from-file", id="replace-existing"),
+        pytest.param(None, False, "from-file", id="set-missing-without-override"),
+        pytest.param(None, True, "from-file", id="set-missing-with-override"),
+    ],
+)
+def test_load_environment_override(tmp_path, monkeypatch, original, override, want) -> None:
+    # Arrange
+    if original is None:
+        monkeypatch.delenv("SBOM_TEST_OVERRIDE", raising=False)
+    else:
+        monkeypatch.setenv("SBOM_TEST_OVERRIDE", original)
+    env_file = tmp_path / ".env"
+    env_file.write_text("SBOM_TEST_OVERRIDE=from-file\n", encoding="utf-8")
 
-        # Act
-        result = config.load_environment(dotenv_path=env_file)
+    # Act
+    got = config.load_environment(dotenv_path=env_file, override=override)
 
-        # Assert
-        assert result is True
-        assert os.environ.get("SBOM_TEST_KEY") == "hello"
+    # Assert
+    assert got is True
+    assert os.environ["SBOM_TEST_OVERRIDE"] == want
 
-    def test_missing_file_returns_false(self, tmp_path, env_cleanup) -> None:
-        # Arrange
-        missing = tmp_path / "does-not-exist.env"
 
-        # Act
-        result = config.load_environment(dotenv_path=missing)
+def test_load_environment_missing_file_returns_false(tmp_path, monkeypatch) -> None:
+    # Arrange
+    monkeypatch.delenv("SBOM_TEST_KEY", raising=False)
+    missing = tmp_path / "does-not-exist.env"
 
-        # Assert
-        assert result is False
+    # Act
+    got = config.load_environment(dotenv_path=missing)
 
-    def test_override_false_keeps_existing(self, tmp_path, env_cleanup) -> None:
-        # Arrange
-        os.environ["SBOM_TEST_OVERRIDE"] = "original"
-        env_file = tmp_path / ".env"
-        env_file.write_text("SBOM_TEST_OVERRIDE=from-file\n", encoding="utf-8")
-
-        # Act
-        config.load_environment(dotenv_path=env_file, override=False)
-
-        # Assert
-        assert os.environ["SBOM_TEST_OVERRIDE"] == "original"
-
-    def test_override_true_replaces_existing(self, tmp_path, env_cleanup) -> None:
-        # Arrange
-        os.environ["SBOM_TEST_OVERRIDE"] = "original"
-        env_file = tmp_path / ".env"
-        env_file.write_text("SBOM_TEST_OVERRIDE=from-file\n", encoding="utf-8")
-
-        # Act
-        config.load_environment(dotenv_path=env_file, override=True)
-
-        # Assert
-        assert os.environ["SBOM_TEST_OVERRIDE"] == "from-file"
+    # Assert
+    assert got is False
+    assert "SBOM_TEST_KEY" not in os.environ
