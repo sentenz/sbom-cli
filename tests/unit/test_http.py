@@ -1,52 +1,78 @@
-"""
-Unit tests for :mod:`sbom.utils.http`.
-
-Verifies the retry-enabled session: default and custom retry configuration,
-and that adapters are mounted for both http and https.
-"""
+"""Table-driven contract tests for retry-enabled HTTP sessions."""
 
 from __future__ import annotations
 
 import pytest
+import requests
 
 from sbom.resources import constants
 from sbom.utils import http
 
 
-class TestSessionRetries:
-    def test_returns_requests_session(self) -> None:
-        session = http.session_retries()
-        assert session is not None
-        assert hasattr(session, "request")
-
-    def test_adapters_mounted_for_http_and_https(self) -> None:
-        session = http.session_retries()
+@pytest.mark.parametrize(
+    "kwargs,want_total,want_backoff,want_status",
+    [
+        pytest.param(
+            {},
+            constants.HTTP_MAX_RETRIES,
+            constants.HTTP_BACKOFF_FACTOR,
+            constants.HTTP_STATUS,
+            id="defaults",
+        ),
+        pytest.param(
+            {"status_forcelist": None},
+            constants.HTTP_MAX_RETRIES,
+            constants.HTTP_BACKOFF_FACTOR,
+            constants.HTTP_STATUS,
+            id="none-status-uses-default",
+        ),
+        pytest.param(
+            {"status_forcelist": []},
+            constants.HTTP_MAX_RETRIES,
+            constants.HTTP_BACKOFF_FACTOR,
+            constants.HTTP_STATUS,
+            id="empty-status-uses-default",
+        ),
+        pytest.param(
+            {"total_retries": 7, "backoff_factor": 2.0, "status_forcelist": [500]},
+            7,
+            2.0,
+            [500],
+            id="custom-retry-settings",
+        ),
+        pytest.param(
+            {"total_retries": 0, "backoff_factor": 0.0, "status_forcelist": [429, 503]},
+            0,
+            0.0,
+            [429, 503],
+            id="zero-retries",
+        ),
+    ],
+)
+def test_session_retries_configures_both_schemes(
+    kwargs, want_total, want_backoff, want_status
+) -> None:
+    # Act
+    with http.session_retries(**kwargs) as session:
+        # Assert
+        assert isinstance(session, requests.Session)
         assert "http://" in session.adapters
         assert "https://" in session.adapters
+        http_adapter = session.get_adapter("http://example.com")
+        https_adapter = session.get_adapter("https://example.com")
+        assert http_adapter is https_adapter
 
-    def test_default_retry_values(self) -> None:
-        session = http.session_retries()
-        adapter = session.get_adapter("https://example.com")
-        retry = adapter.max_retries
-        assert retry.total == constants.HTTP_MAX_RETRIES
-        assert retry.backoff_factor == constants.HTTP_BACKOFF_FACTOR
-        assert set(retry.status_forcelist) == set(constants.HTTP_STATUS)
-        assert set(retry.allowed_methods) == set(constants.HTTP_METHODS)
+        got = https_adapter.max_retries
+        assert got.total == want_total
+        assert got.backoff_factor == want_backoff
+        assert list(got.status_forcelist) == list(want_status)
+        assert set(got.allowed_methods) == set(constants.HTTP_METHODS)
+        assert got.raise_on_status is False
 
-    def test_custom_retry_values(self) -> None:
-        session = http.session_retries(
-            total_retries=7,
-            backoff_factor=2.0,
-            status_forcelist=[500],
+
+def test_session_retries_returns_independent_sessions() -> None:
+    with http.session_retries() as first, http.session_retries() as second:
+        assert first is not second
+        assert first.get_adapter("https://example.com") is not second.get_adapter(
+            "https://example.com"
         )
-        adapter = session.get_adapter("http://example.com")
-        retry = adapter.max_retries
-        assert retry.total == 7
-        assert retry.backoff_factor == 2.0
-        assert list(retry.status_forcelist) == [500]
-
-    def test_default_status_forcelist_is_none_uses_constant(self) -> None:
-        # Passing status_forcelist=None must fall back to constants.HTTP_STATUS.
-        session = http.session_retries(status_forcelist=None)
-        retry = session.get_adapter("https://example.com").max_retries
-        assert set(retry.status_forcelist) == set(constants.HTTP_STATUS)
