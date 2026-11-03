@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.2](https://github.com/sentenz/sbom-cli/compare/v1.0.1...v1.0.2) (2026-11-03)
+
+### Bug Fixes
+
+* **deps:** update minor versions ([#2](https://github.com/sentenz/sbom-cli/issues/2)) ([db67a37](https://github.com/sentenz/sbom-cli/commit/db67a37ad6762cde4d84f1a5ba986173533caede))
+
 ## [1.0.1](https://github.com/sentenz/sbom-cli/compare/v1.0.0...v1.0.1) (2026-11-03)
 
 ### Bug Fixes
