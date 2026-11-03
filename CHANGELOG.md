@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.3](https://github.com/sentenz/sbom-cli/compare/v1.0.2...v1.0.3) (2026-11-03)
+
+### Bug Fixes
+
+* **security:** harden transport defaults and project deletion ([#4](https://github.com/sentenz/sbom-cli/issues/4)) ([345a543](https://github.com/sentenz/sbom-cli/commit/345a543c1df28c74dceb82e1916ec6d7ca2741aa))
+
 ## [1.0.2](https://github.com/sentenz/sbom-cli/compare/v1.0.1...v1.0.2) (2026-11-03)
 
 ### Bug Fixes
