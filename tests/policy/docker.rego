@@ -20,5 +20,5 @@ deny_dockerfile_base_image contains msg if {
 	command.Cmd == "from"
 	image := command.Value[0]
 	not contains(image, "@sha256:")
-	msg := sprintf("Dockerfile base image %q must be pinned by digest", [image])
+	msg := $"Dockerfile base image ${image} must be pinned by digest"
 }

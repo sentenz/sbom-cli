@@ -18,7 +18,7 @@ deny_unpinned_runtime_dependencies contains msg if {
 	is_pyproject
 	some dependency in input.project.dependencies
 	not regex.match(`^[A-Za-z0-9_.-]+(\[[^]]+\])?==[^ ;]+$`, dependency)
-	msg := sprintf("Runtime dependency %q must use an exact == version pin", [dependency])
+	msg := $"Runtime dependency ${dependency} must use an exact == version pin"
 }
 
 # METADATA
@@ -31,5 +31,5 @@ deny_unpinned_dev_dependencies contains msg if {
 	is_pyproject
 	some dependency in input.project["optional-dependencies"].dev
 	not regex.match(`^[A-Za-z0-9_.-]+(\[[^]]+\])?==[^ ;]+$`, dependency)
-	msg := sprintf("Development dependency %q must use an exact == version pin", [dependency])
+	msg := $"Development dependency ${dependency} must use an exact == version pin"
 }
