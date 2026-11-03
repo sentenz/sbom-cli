@@ -1,4 +1,3 @@
-
 # SBOM CLI
 
 [![Python Tests](https://github.com/sentenz/sbom-cli/actions/workflows/python-tests.yml/badge.svg?branch=main)](https://github.com/sentenz/sbom-cli/actions/workflows/python-tests.yml)
