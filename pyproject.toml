@@ -35,6 +35,10 @@ dev = [
   "ruff==0.17.3",
 ]
 
+fuzz = [
+  "atheris==3.1.0",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]

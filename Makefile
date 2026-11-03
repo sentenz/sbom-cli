@@ -160,6 +160,21 @@ test-fuzz:
 	$(TEST_PYTEST) tests/fuzz -v
 .PHONY: test-fuzz
 
+# Atheris fuzzing uses a disposable copy of tracked seeds so mutations do not
+# change the repository's curated seed corpus.
+FUZZ_RUNS ?= 2000
+FUZZ_MAX_LEN ?= 2048
+FUZZ_ARTIFACT_DIR ?= logs/fuzz
+
+## Run a bounded coverage-guided project lookup campaign with Atheris
+test-fuzz-guided:
+	@mkdir -p $(FUZZ_ARTIFACT_DIR)/corpus/project_lookup $(FUZZ_ARTIFACT_DIR)/artifacts
+	@cp fuzz/corpus/project_lookup/* $(FUZZ_ARTIFACT_DIR)/corpus/project_lookup/
+	$(TEST_VENV)/bin/python -m fuzz.fuzz_project_lookup $(FUZZ_ARTIFACT_DIR)/corpus/project_lookup \
+		-atheris_runs=$(FUZZ_RUNS) -max_len=$(FUZZ_MAX_LEN) -timeout=5 \
+		-detect_leaks=0 -artifact_prefix=$(FUZZ_ARTIFACT_DIR)/artifacts/
+.PHONY: test-fuzz-guided
+
 ## Run the integration test suite (no-op if empty)
 test-integration:
 	$(TEST_PYTEST) tests/integration -v || [ $$? -eq 5 ]
