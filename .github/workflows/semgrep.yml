@@ -34,7 +34,7 @@ jobs:
 
       - name: Preserve and upload SARIF results
         if: always()
-        uses: ./.github/actions/upload-trivy-sarif
+        uses: ./.github/actions/upload-sarif
         with:
           sarif-file: semgrep-results.sarif
           artifact-name: semgrep-sarif
