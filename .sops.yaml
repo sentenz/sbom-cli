@@ -1,0 +1,28 @@
+# https://getsops.io/
+
+creation_rules:
+  # 1. Dotenv files: encrypt only secrets-like keys, preserve non-sensitive config
+  - path_regex: '(^|/)\.env(\..*)?$'
+    input_type: dotenv
+    encrypted_regex: "(?i)(secret|password|token|apikey|api_key|key|credential|pass)"
+    key_groups:
+      - pgp:
+          - "0F0FA4800EFAD0BE36B109AE7F34A16A052377E8" # sops
+          - "9BF541DADA7481E3477EA8659EC35CA325E381EE" # sops-sbom-cli
+
+  # 2. Certificates and Private Keys
+  - path_regex: '.*\.(pem|key|crt|cer|p12|der)$'
+    input_type: binary
+    key_groups:
+      - pgp:
+          - "0F0FA4800EFAD0BE36B109AE7F34A16A052377E8" # sops
+          - "9BF541DADA7481E3477EA8659EC35CA325E381EE" # sops-sbom-cli
+
+  # 3.1. Generic group rule
+  - key_groups:
+      - pgp:
+          - "0F0FA4800EFAD0BE36B109AE7F34A16A052377E8" # sops
+          - "9BF541DADA7481E3477EA8659EC35CA325E381EE" # sops-sbom-cli
+
+  # 3.2. Generic single rule
+  - pgp: "BE911BE5BFA7E1F05D3B6EB2C1EC33DDEB834AAB" # sops-sentenz

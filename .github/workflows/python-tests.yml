@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: Apache-2.0
+
+name: CI Python Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-tests:
+    name: Python Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: python:3.14-slim@sha256:a2b82f3c48559aa0a8446d9af49826b6e2b2016f4cd2afabfe6013ec53729170
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run Python tests component
+        uses: ./.github/actions/python-tests
+        with:
+          job: python-tests
+          artifacts_paths: logs/
+          artifacts_retention_days: "1"
+          allow_failure: "false"
+          before_task: make test-setup
+          task: make test-coverage
+          after_task: make test-teardown

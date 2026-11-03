@@ -1,0 +1,8 @@
+# Exclude everything by default
+**
+
+# Explicitly re-include what the Dockerfile needs
+!pyproject.toml
+!README.md
+!src/
+!src/**

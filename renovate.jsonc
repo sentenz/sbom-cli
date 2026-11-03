@@ -1,0 +1,172 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:best-practices"
+  ],
+  "semanticCommits": "enabled",
+  "minimumReleaseAge": "3 days",
+  "minimumReleaseAgeBehaviour": "timestamp-optional",
+  "internalChecksFilter": "strict",
+  "pinDigests": true,
+  "separateMinorPatch": true,
+  "dependencyDashboard": true,
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 10,
+  "ignorePaths": [
+    "**/vendor/**",
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/charts/**",
+    "test/**",
+    "tests/**",
+    "logs/**"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "description": "Security vulnerability alerts: bypass release-age delays, group by severity, and auto-merge low-risk fixes once CI passes.",
+    "addLabels": [
+      "security"
+    ],
+    "minimumReleaseAge": null,
+    "groupName": "security fixes",
+    "automerge": true,
+    "automergeType": "branch",
+    "automergeStrategy": "squash",
+    "branchTopic": "security-fixes",
+    "commitMessageTopic": "security fixes",
+    "prBodyNotes": [
+      "This PR addresses one or more known security vulnerabilities. Please review and merge promptly."
+    ]
+  },
+  "lockFileMaintenance": {
+    "enabled": true
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update versioned Docker image references in repository support files.",
+      "managerFilePatterns": [
+        "**/action.{yml,yaml}",
+        "**/[Mm]akefile",
+        "**/GNUMakefile",
+        "**/*.mk"
+      ],
+      "matchStrings": [
+        "(?<depName>(?:(?:[A-Za-z0-9.-]+(?::[0-9]+)?/)?[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*)):(?<currentValue>v?\\d[0-9A-Za-z_.-]*)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?"
+      ],
+      "autoReplaceStringTemplate": "{{{depName}}}:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{else}}{{#if currentDigest}}@{{{currentDigest}}}{{/if}}{{/if}}",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Defer dependency management of GitHub Actions to Dependabot.",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Group major updates.",
+      "matchUpdateTypes": [
+        "major",
+        "digest",
+        "pin",
+        "pinDigest"
+      ],
+      "groupName": "major versions",
+      "automerge": false
+    },
+    {
+      "description": "Group minor updates.",
+      "matchUpdateTypes": [
+        "minor",
+        "digest",
+        "pin",
+        "pinDigest"
+      ],
+      "groupName": "minor versions",
+      "automerge": false
+    },
+    {
+      "description": "Group patch updates.",
+      "matchUpdateTypes": [
+        "patch",
+        "digest",
+        "pin",
+        "pinDigest"
+      ],
+      "groupName": "patch versions",
+      "automerge": false
+    },
+    {
+      "description": "Group container image digest bumps across Dockerfiles and Containerfiles.",
+      "matchManagers": [
+        "dockerfile",
+        "containerfile"
+      ],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "groupName": "container images",
+      "automerge": false,
+      "semanticCommitType": "fix"
+    },
+    {
+      "description": "Container image tag and digest updates in Makefiles.",
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchFileNames": [
+        "**/[Mm]akefile",
+        "**/GNUMakefile",
+        "**/*.mk"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch",
+        "digest",
+        "pin",
+        "pinDigest"
+      ],
+      "groupName": "makefile container images",
+      "automerge": false
+    },
+    {
+      "description": "Container image tag and digest updates in GitHub Actions files.",
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchFileNames": [
+        "**/action.{yml,yaml}"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "groupName": "github actions container images",
+      "automerge": false,
+      "semanticCommitType": "ci"
+    }
+  ]
+}

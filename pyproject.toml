@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sbom"
+version = "1.0.0"
+description = "Client and CLI for SBOM operations"
+readme = "README.md"
+license = { text = "Proprietary" }
+requires-python = ">=3.10"
+dependencies = [
+  "configargparse==1.8.0",
+  "requests==2.34.2",
+  "types-requests==2.33.0.20261030",
+  "urllib3==2.8.0",
+  "python-dotenv==1.2.4",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+sbom = "sbom.cli:main"
+
+[project.optional-dependencies]
+dev = [
+  "pytest==9.1.1",
+  "pytest-cov==7.1.0",
+  "hypothesis==6.168.5",
+  "isort==9.0.2",
+  "black==26.10.1",
+  "flake8==7.4.1",
+  "mypy==2.4.1",
+  "ruff==0.16.10",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-ra --strict-markers"
+markers = [
+  "unit: fast, isolated unit tests (no network)",
+  "fuzz: property-based / fuzz tests (hypothesis)",
+  "integration: tests that exercise multiple components together",
+  "e2e: end-to-end tests against a live server (deselected by default)",
+]
+
+[tool.isort]
+profile = "black"
+
+[tool.ruff]
+line-length = 100
+lint.extend-ignore = ["E203"]
+lint.select = ["E", "F", "W", "C90"]
+
+[tool.mypy]
