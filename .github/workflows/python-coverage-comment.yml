@@ -26,7 +26,6 @@ jobs:
     timeout-minutes: 5
     permissions:
       actions: read
-      contents: read
       pull-requests: write
     steps:
       - name: Resolve current pull request and test artifact
@@ -35,10 +34,17 @@ jobs:
         with:
           script: |
             const run = context.payload.workflow_run;
-            // workflow_run.pull_requests can be empty for forks. Resolve via GitHub,
-            // never a PR number supplied inside an untrusted artifact.
-            const pulls = await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit, {
-              ...context.repo, commit_sha: run.head_sha, per_page: 100
+            if (!run.head_repository?.owner?.login) {
+              core.info('Source repository is unavailable; skipping coverage comment.');
+              return;
+            }
+            // workflow_run.pull_requests and commit associations can be empty for
+            // forks. Query GitHub by head owner/branch, then verify repository IDs
+            // and SHA. Never trust a PR number supplied inside an artifact.
+            const pulls = await github.paginate(github.rest.pulls.list, {
+              ...context.repo, state: 'open',
+              head: `${run.head_repository.owner.login}:${run.head_branch}`,
+              per_page: 100
             });
             const matches = pulls.filter(pr =>
               pr.state === 'open' &&
