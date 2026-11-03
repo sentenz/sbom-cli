@@ -10,7 +10,7 @@ readme = "README.md"
 license = { text = "Proprietary" }
 requires-python = ">=3.10"
 dependencies = [
-  "configargparse==1.8.0",
+  "configargparse==1.9.0",
   "requests==2.34.2",
   "types-requests==2.33.0.20261030",
   "urllib3==2.8.0",
@@ -25,14 +25,14 @@ sbom = "sbom.cli:main"
 
 [project.optional-dependencies]
 dev = [
-  "pytest==9.1.1",
+  "pytest==9.2.0",
   "pytest-cov==7.1.0",
-  "hypothesis==6.168.5",
+  "hypothesis==6.170.14",
   "isort==9.0.2",
   "black==26.10.1",
-  "flake8==7.4.1",
+  "flake8==7.5.0",
   "mypy==2.4.1",
-  "ruff==0.16.10",
+  "ruff==0.17.3",
 ]
 
 [tool.pytest.ini_options]
