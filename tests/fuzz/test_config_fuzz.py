@@ -1,13 +1,4 @@
-"""
-Property-based (fuzz) tests for :mod:`sbom.utils.config` using Hypothesis.
-
-Property: for any well-formed ``KEY=VALUE`` line written to a ``.env`` file,
-``load_environment`` (with ``override=True``) sets that variable in the
-environment to exactly ``VALUE``.
-
-Keys are restricted to valid identifiers and values to a safe alphabet so the
-test isolates the load behavior from dotenv's quoting/escaping rules.
-"""
+"""Property-based environment loading contracts with per-example state isolation."""
 
 from __future__ import annotations
 
@@ -20,34 +11,45 @@ from hypothesis import strategies as st
 
 from sbom.utils import config
 
-# A single, fixed key so the test stays independent and easy to clean up.
 _KEY = "SBOM_FUZZ_KEY"
+_SAFE_VALUES = st.text(
+    alphabet=st.characters(whitelist_categories=("L", "N"), whitelist_characters="-_./"),
+    min_size=0,
+    max_size=64,
+)
 
 
 class TestLoadEnvironmentFuzz:
-    @given(
-        value=st.text(
-            alphabet=st.characters(whitelist_categories=("L", "N"), whitelist_characters="-_./"),
-            min_size=0,
-            max_size=64,
-        ),
-    )
+    @given(value=_SAFE_VALUES)
     @example(value="")
     @example(value="alpha-_.42")
+    @example(value="grüße")
     @settings(max_examples=50, deadline=None)
-    def test_well_formed_line_is_loaded(self, value) -> None:
-        with TemporaryDirectory() as directory:
-            # Arrange
-            os.environ.pop(_KEY, None)
+    def test_well_formed_line_is_loaded(self, value, monkeypatch) -> None:
+        # A function-scoped fixture is not reset between Hypothesis examples.
+        # Explicitly capture and restore the variable for *each* generated case.
+        with monkeypatch.context() as environment, TemporaryDirectory() as directory:
+            environment.setenv(_KEY, "temporary")
+            environment.delenv(_KEY)
             env_file = Path(directory) / ".env"
             env_file.write_text(f"{_KEY}={value}\n", encoding="utf-8")
 
-            # Act
-            result = config.load_environment(dotenv_path=env_file, override=True)
+            got = config.load_environment(dotenv_path=env_file, override=True)
 
-            # Assert (invariant)
-            assert result is True
-            assert os.environ.get(_KEY) == value
+            assert got is True
+            assert os.environ[_KEY] == value
 
-        # Teardown (keep the suite independent)
-        os.environ.pop(_KEY, None)
+    @given(value=_SAFE_VALUES)
+    @example(value="")
+    @example(value="new-value")
+    @settings(max_examples=50, deadline=None)
+    def test_override_false_preserves_existing_value(self, value, monkeypatch) -> None:
+        with monkeypatch.context() as environment, TemporaryDirectory() as directory:
+            environment.setenv(_KEY, "preexisting")
+            env_file = Path(directory) / ".env"
+            env_file.write_text(f"{_KEY}={value}\n", encoding="utf-8")
+
+            got = config.load_environment(dotenv_path=env_file, override=False)
+
+            assert got is True
+            assert os.environ[_KEY] == "preexisting"
