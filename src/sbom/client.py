@@ -9,6 +9,7 @@ strategy for handling transient HTTP errors.
 import base64
 import json
 import os
+from uuid import UUID
 
 import requests
 
@@ -102,6 +103,7 @@ class Client:
                 files=files,
                 timeout=self.timeout,
                 verify=self.verify_ssl,
+                allow_redirects=False,
             )
         except requests.RequestException as e:
             raise exceptions.Error(f"Network error when calling {url}: {e}") from e
@@ -219,16 +221,20 @@ class Client:
             project_uuid: UUID of the project to delete.
 
         Raises:
-            exceptions.ValidationError: If ``project_uuid`` is empty.
+            exceptions.ValidationError: If ``project_uuid`` is not a valid UUID.
             exceptions.NotFoundError: If the project does not exist (HTTP 404).
             exceptions.HTTPError: If the server returns a non-2xx response
                 (other than 404).
             exceptions.Error: If a network-level error occurs.
         """
-        if not project_uuid:
+        try:
+            if not isinstance(project_uuid, str):
+                raise ValueError("UUID must be a string")
+            project_uuid = str(UUID(project_uuid))
+        except ValueError as e:
             raise exceptions.ValidationError(
-                "`project_uuid` must be provided and non-empty."
-            )
+                "`project_uuid` must be a valid UUID."
+            ) from e
 
         endpoint = f"{constants.API_ENDPOINT_PROJECT}/{project_uuid}"
         self._send_request(method="DELETE", endpoint=endpoint)
@@ -237,15 +243,15 @@ class Client:
         """Find a project by name and version.
 
         Sends a GET to /api/v1/project with query parameters ``name`` and
-        ``version``. If multiple projects match, returns the first item in
-        the JSON array. Returns None if no project matches.
+        ``version``. Requires exactly one exact match in the returned array.
+        Returns None if no project matches; rejects ambiguous results.
 
         Args:
             name: Name of the project to look up.
             version: Version of the project to look up.
 
         Returns:
-            The first matching project dictionary, or None if none found.
+            The unique exact matching project, or None if none found.
 
         Raises:
             exceptions.ValidationError: If ``name`` or ``version`` is empty.
@@ -266,6 +272,16 @@ class Client:
             params=params,
         )
 
-        if isinstance(projects, list) and projects:
-            return projects[0]
-        return None
+        if not isinstance(projects, list) or any(
+            not isinstance(project, dict) for project in projects
+        ):
+            raise exceptions.ValidationError("Invalid project lookup response.")
+        matches = [
+            project for project in projects
+            if project.get("name") == name and project.get("version") == version
+        ]
+        if len(matches) > 1:
+            raise exceptions.ValidationError(
+                "Ambiguous project lookup; specify an explicit project UUID."
+            )
+        return matches[0] if matches else None

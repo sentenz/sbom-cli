@@ -8,10 +8,10 @@ import argparse
 import logging
 import signal
 import sys
+from pathlib import Path
 from types import FrameType
 
 import configargparse
-import urllib3
 
 from sbom.client import Client
 from sbom.resources import constants
@@ -99,7 +99,7 @@ def cmd_upload(args: argparse.Namespace) -> int:
 def cmd_delete(args: argparse.Namespace) -> int:
     """Handle the 'delete' subcommand: delete a project (and its SBOM).
 
-    If ``--project-uuid`` is provided, deletes by UUID. Otherwise, if both
+    If only ``--project-uuid`` is provided, deletes by UUID. Otherwise, if both
     ``--project-name`` and ``--project-version`` are provided, looks up the
     project to obtain its UUID and then deletes it. Logs structured events.
 
@@ -128,6 +128,10 @@ def cmd_delete(args: argparse.Namespace) -> int:
 
     try:
         if args.project_uuid:
+            if args.project_name or args.project_version:
+                raise exceptions.ValidationError(
+                    "Specify either project UUID or name and version, not both."
+                )
             client.delete_project(project_uuid=args.project_uuid)
             logger.info("event=delete_success project_uuid=%s", args.project_uuid)
             return 0
@@ -229,6 +233,10 @@ def create_parser() -> configargparse.ArgParser:
         add_config_file_help=True,
     )
     parser.add(
+        "--env-file",
+        help="Load a trusted dotenv file explicitly (before the subcommand)",
+    )
+    parser.add(
         "-V",
         "--version",
         action="version",
@@ -261,7 +269,8 @@ def create_parser() -> configargparse.ArgParser:
     parent_parser.add(
         "--verify-ssl",
         env_var="SBOM_VERIFY_SSL",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
+        default=True,
         help="Verify SSL certificates (default: true)",
     )
 
@@ -360,12 +369,16 @@ def main() -> None:
     dispatches to the appropriate subcommand handler.
     """
 
-    # XXX Disable InsecureRequestWarning from `urllib3`
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
     log.setup()
 
-    config.load_environment()
+    # Only an explicit CLI path may authorize loading environment settings.
+    bootstrap = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
+    bootstrap.add_argument("--env-file")
+    selected, _ = bootstrap.parse_known_args()
+    if selected.env_file:
+        if not Path(selected.env_file).is_file():
+            bootstrap.error("--env-file must name an existing file")
+        config.load_environment(dotenv_path=selected.env_file)
 
     parser = create_parser()
     args = parser.parse_args()

@@ -62,7 +62,7 @@ The [Command Line Interface (CLI)](https://clig.dev/) supports multiple configur
   ```env
   SBOM_API_URL=https://api.component-analysis.localhost/
   SBOM_API_KEY=<API_KEY>
-  SBOM_VERIFY_SSL=false
+  SBOM_VERIFY_SSL=true
   SBOM_PARENT_NAME="Project"
   SBOM_PROJECT_NAME="Dependency-Track"
   SBOM_PROJECT_VERSION="4.13.2"
@@ -71,13 +71,13 @@ The [Command Line Interface (CLI)](https://clig.dev/) supports multiple configur
   ```
 
   ```bash
-  # Implicitly Loading (default .env)
-  sbom upload -f sbom.cdx.json
+  # Explicitly load a trusted dotenv file
+  sbom --env-file .env upload -f sbom.cdx.json
   ```
 
   ```bash
   # Explicitly Loading (specific .env.stage)
-  source .env.stage
+  set -a; source .env.stage; set +a
   sbom upload -f sbom.cdx.json
   ```
 

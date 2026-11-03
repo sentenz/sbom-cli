@@ -1,5 +1,8 @@
 # SBOM CLI
 
+See [security defaults and migration](docs/security-defaults.md) for TLS,
+explicit dotenv loading, redirect handling, and project deletion changes.
+
 The SBOM tool provides a command-line interface (CLI) for managing Software Bill of Materials (SBOM) files on an API server, such as OWASP Dependency-Track.
 
 - [1. Details](#1-details)
@@ -54,7 +57,7 @@ The SBOM tool provides a command-line interface (CLI) for managing Software Bill
 | `SBOM_PROJECT_NAME`    | MyProject                            | If auto-create | The name of the project to which the BOM belongs.                 |
 | `SBOM_PROJECT_VERSION` | 1.0.0                                | If auto-create | The version of the project to which the BOM belongs.              |
 | `SBOM_PROJECT_UUID`    | 51cef167-...                         | If by UUID     | The UUID of the project to which the BOM belongs.                 |
-| `SBOM_VERIFY_SSL`      | false                                | Optional       | Whether to verify the SSL certificate of the API endpoint.        |
+| `SBOM_VERIFY_SSL`      | true                                 | Optional       | Whether to verify the SSL certificate of the API endpoint.        |
 | `SBOM_AUTO_CREATE`     | true                                 | Optional       | Whether to automatically create the project if it does not exist. |
 | `SBOM_PARENT_UUID`     | 12345678-...                         | Optional       | The UUID of the parent project, if applicable.                    |
 | `SBOM_IS_LATEST`       | true                                 | Optional       | Whether this BOM should be marked as the latest for the project.  |
@@ -156,7 +159,7 @@ The SBOM tool provides a command-line interface (CLI) for managing Software Bill
 
 ### 2.3. Access Control
 
-Create an API key in the Dependency-Track UI and set it in the `.env` file as `SBOM_API_KEY`.
+Create an API key in the Dependency-Track UI and export it as `SBOM_API_KEY`, or load a trusted dotenv file explicitly with `sbom --env-file /path/to/.env upload ...`. Dotenv files in the working directory are no longer loaded automatically.
 
 - [Permissions](https://dependencytrack.github.io/docs/next/reference/permissions/)
   > Ensure the API key has the necessary permissions for BOM upload and project creation (if using auto-create).

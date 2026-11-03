@@ -254,10 +254,10 @@ class TestDeleteProject:
     def test_delete_uses_correct_endpoint(self, make_client, make_session, make_response) -> None:
         session = make_session(response=make_response(204))
         client = make_client(session=session)
-        client.delete_project(project_uuid="abc-123")
+        client.delete_project(project_uuid="0760d777-3907-4937-b667-e79d820a393f")
         call = session.last_call
         assert call["method"] == "DELETE"
-        assert call["url"] == f"https://dt.example.com{constants.API_ENDPOINT_PROJECT}/abc-123"
+        assert call["url"] == f"https://dt.example.com{constants.API_ENDPOINT_PROJECT}/0760d777-3907-4937-b667-e79d820a393f"
 
 
 # ─── find_project ───────────────────────────────────────────────────────────────
@@ -271,12 +271,12 @@ class TestFindProject:
         with pytest.raises(exceptions.ValidationError):
             client.find_project(name="SBOM", version="")
 
-    def test_returns_first_match(self, make_client, make_session, make_response) -> None:
-        projects = [{"uuid": "u1", "name": "SBOM"}, {"uuid": "u2", "name": "SBOM"}]
+    def test_returns_exact_match(self, make_client, make_session, make_response) -> None:
+        projects = [{"uuid": "u2", "name": "SBOM", "version": "other"}, {"uuid": "u1", "name": "SBOM", "version": "4.13.4"}]
         session = make_session(response=make_response(200, projects))
         client = make_client(session=session)
         got = client.find_project(name="SBOM", version="4.13.4")
-        assert got == {"uuid": "u1", "name": "SBOM"}
+        assert got == {"uuid": "u1", "name": "SBOM", "version": "4.13.4"}
         assert session.last_call["params"] == {"name": "SBOM", "version": "4.13.4"}
 
     def test_returns_none_when_no_match(self, make_client, make_session, make_response) -> None:
@@ -284,7 +284,8 @@ class TestFindProject:
         client = make_client(session=session)
         assert client.find_project(name="SBOM", version="4.13.4") is None
 
-    def test_returns_none_when_not_a_list(self, make_client, make_session, make_response) -> None:
+    def test_rejects_non_list_response(self, make_client, make_session, make_response) -> None:
         session = make_session(response=make_response(200, {}))
         client = make_client(session=session)
-        assert client.find_project(name="SBOM", version="4.13.4") is None
+        with pytest.raises(exceptions.ValidationError):
+            client.find_project(name="SBOM", version="4.13.4")
