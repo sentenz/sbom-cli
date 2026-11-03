@@ -417,11 +417,16 @@ container-docker-teardown:
 SBOM_CONTAINER_IMAGE ?= ghcr.io/sentenz/sbom-cli:v1.0.0
 SBOM_CONTAINER_ALIAS := docker run --rm --network=host -v "${PWD}:/workspace" -w /workspace "$(SBOM_CONTAINER_IMAGE)"
 
+SBOM_FILE_ENV ?= .env
+SBOM_FILE_CDX ?= logs/sbom/sbom-image.cdx.json
+
+# Usage: make sbom-upload SBOM_FILE_ENV=".env.stage" SBOM_FILE_CDX="logs/sbom/sbom-image.cdx.json"
+#
 ## Upload SBOM to the SCA platform and generate a report
 sbom-upload:
 	@mkdir -p logs/sbom
 
-	$(SBOM_CONTAINER_ALIAS) upload --file "logs/sbom/sbom-image.cdx.json" 2>&1 | tee logs/sbom/upload.log
+	$(SBOM_CONTAINER_ALIAS) --env-file "$(SBOM_FILE_ENV)" upload --file "$(SBOM_FILE_CDX)" 2>&1 | tee logs/sbom/upload.log
 .PHONY: sbom-upload
 
 # ─── SAST Manager ────────────────────────────────────────────────────────────────────────────────

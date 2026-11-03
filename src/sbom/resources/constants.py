@@ -42,6 +42,7 @@ HTTP_METHODS: Final[list[str]] = [
 # ─── File & Env Names ──────────────────────────────────────────────
 ENV_FILE: Final[str] = ".env"
 CONFIG_FILES: Final[list[str]] = [
+    ".sbom.yml",
     "~/.sbom/config.yml",
     "/etc/sbom/config.yml",
 ]

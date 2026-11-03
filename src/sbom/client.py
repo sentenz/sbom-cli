@@ -277,7 +277,8 @@ class Client:
         ):
             raise exceptions.ValidationError("Invalid project lookup response.")
         matches = [
-            project for project in projects
+            project
+            for project in projects
             if project.get("name") == name and project.get("version") == version
         ]
         if len(matches) > 1:

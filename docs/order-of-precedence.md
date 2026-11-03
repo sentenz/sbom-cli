@@ -76,9 +76,8 @@ The [Command Line Interface (CLI)](https://clig.dev/) supports multiple configur
   ```
 
   ```bash
-  # Explicitly Loading (specific .env.stage)
-  set -a; source .env.stage; set +a
-  sbom upload -f sbom.cdx.json
+  # Explicitly load a trusted dotenv file
+  sbom --env-file .env.stage upload -f sbom.cdx.json
   ```
 
 ### 1.4. Table of Comparison

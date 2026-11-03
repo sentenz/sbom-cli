@@ -15,11 +15,17 @@ from sbom.utils import exceptions
 @pytest.mark.parametrize("command", ["upload", "delete"])
 @pytest.mark.parametrize(
     "environment,flags,expected",
-    [(None, [], True), ("false", [], False), ("true", [], True),
-     ("false", ["--verify-ssl"], True),
-     ("true", ["--no-verify-ssl"], False)],
+    [
+        (None, [], True),
+        ("false", [], False),
+        ("true", [], True),
+        ("false", ["--verify-ssl"], True),
+        ("true", ["--no-verify-ssl"], False),
+    ],
 )
-def test_tls_default_and_explicit_overrides(monkeypatch, command, environment, flags, expected):
+def test_tls_default_and_explicit_overrides(
+    monkeypatch, command, environment, flags, expected
+):
     monkeypatch.delenv("SBOM_VERIFY_SSL", raising=False)
     monkeypatch.setattr(constants, "CONFIG_FILES", [])
     if environment is not None:
@@ -32,7 +38,9 @@ def test_tls_default_and_explicit_overrides(monkeypatch, command, environment, f
 
 @pytest.mark.parametrize("status", [301, 302, 303, 307, 308])
 @pytest.mark.parametrize("method", ["GET", "PUT", "DELETE"])
-@pytest.mark.parametrize("destination", ["https://other.example/steal", "http://dt.example/steal"])
+@pytest.mark.parametrize(
+    "destination", ["https://other.example/steal", "http://dt.example/steal"]
+)
 def test_redirects_never_resend_credentials_or_payload(status, method, destination):
     class RedirectAdapter(BaseAdapter):
         def __init__(self):
@@ -101,12 +109,20 @@ def test_invalid_delete_uuid_never_sends_request(make_client, make_session, uuid
     assert session.calls == []
 
 
-@pytest.mark.parametrize("projects", [
-    {}, [None],
-    [{"name": "app", "version": "1", "uuid": "a"},
-     {"name": "app", "version": "1", "uuid": "b"}],
-])
-def test_invalid_or_ambiguous_lookup_fails(make_client, make_session, make_response, projects):
+@pytest.mark.parametrize(
+    "projects",
+    [
+        {},
+        [None],
+        [
+            {"name": "app", "version": "1", "uuid": "a"},
+            {"name": "app", "version": "1", "uuid": "b"},
+        ],
+    ],
+)
+def test_invalid_or_ambiguous_lookup_fails(
+    make_client, make_session, make_response, projects
+):
     session = make_session(response=make_response(200, projects))
     with pytest.raises(exceptions.ValidationError):
         make_client(session=session).find_project("app", "1")
@@ -117,31 +133,61 @@ def test_conflicting_delete_selectors_never_call_client(monkeypatch):
     client = Mock()
     monkeypatch.setattr(cli, "Client", Mock(return_value=client))
     monkeypatch.setattr(constants, "CONFIG_FILES", [])
-    args = cli.create_parser().parse_args([
-        "delete", "--api-url", "https://dt.example", "--api-key", "test",
-        "--project-uuid", "0760d777-3907-4937-b667-e79d820a393f",
-        "--project-name", "app", "--project-version", "1",
-    ])
+    args = cli.create_parser().parse_args(
+        [
+            "delete",
+            "--api-url",
+            "https://dt.example",
+            "--api-key",
+            "test",
+            "--project-uuid",
+            "0760d777-3907-4937-b667-e79d820a393f",
+            "--project-name",
+            "app",
+            "--project-version",
+            "1",
+        ]
+    )
     assert cli.cmd_delete(args) == 1
     client.delete_project.assert_not_called()
     client.find_project.assert_not_called()
 
 
-@pytest.mark.parametrize("projects", [
-    [{"name": "app", "version": "2", "uuid": "0760d777-3907-4937-b667-e79d820a393f"}],
-    [{"name": "app", "version": "1", "uuid": "../bom"}],
-    [{"name": "app", "version": "1", "uuid": "a"},
-     {"name": "app", "version": "1", "uuid": "b"}],
-    [None], {},
-])
+@pytest.mark.parametrize(
+    "projects",
+    [
+        [
+            {
+                "name": "app",
+                "version": "2",
+                "uuid": "0760d777-3907-4937-b667-e79d820a393f",
+            }
+        ],
+        [{"name": "app", "version": "1", "uuid": "../bom"}],
+        [
+            {"name": "app", "version": "1", "uuid": "a"},
+            {"name": "app", "version": "1", "uuid": "b"},
+        ],
+        [None],
+        {},
+    ],
+)
 def test_delete_lookup_never_deletes_unsafe_result(
-    monkeypatch, make_client, make_session, make_response, projects,
+    monkeypatch,
+    make_client,
+    make_session,
+    make_response,
+    projects,
 ):
     session = make_session(response=make_response(200, projects))
     monkeypatch.setattr(cli, "Client", lambda **kwargs: make_client(session=session))
     args = cli.argparse.Namespace(
-        api_url="https://dt.example", api_key="test", verify_ssl=True,
-        project_uuid=None, project_name="app", project_version="1",
+        api_url="https://dt.example",
+        api_key="test",
+        verify_ssl=True,
+        project_uuid=None,
+        project_name="app",
+        project_version="1",
     )
     assert cli.cmd_delete(args) == 1
     assert [call["method"] for call in session.calls] == ["GET"]

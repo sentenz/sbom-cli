@@ -1,8 +1,5 @@
 # SBOM CLI
 
-See [security defaults and migration](docs/security-defaults.md) for TLS,
-explicit dotenv loading, redirect handling, and project deletion changes.
-
 The SBOM tool provides a command-line interface (CLI) for managing Software Bill of Materials (SBOM) files on an API server, such as OWASP Dependency-Track.
 
 - [1. Details](#1-details)
