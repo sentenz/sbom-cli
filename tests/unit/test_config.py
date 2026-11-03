@@ -20,7 +20,8 @@ from sbom.utils import config
 )
 def test_load_environment_reads_valid_values(tmp_path, monkeypatch, file_contents, want) -> None:
     # Arrange
-    monkeypatch.delenv("SBOM_TEST_KEY", raising=False)
+    monkeypatch.setenv("SBOM_TEST_KEY", "temporary")
+    monkeypatch.delenv("SBOM_TEST_KEY")
     env_file = tmp_path / ".env"
     env_file.write_text(file_contents, encoding="utf-8")
 
@@ -44,7 +45,8 @@ def test_load_environment_reads_valid_values(tmp_path, monkeypatch, file_content
 def test_load_environment_override(tmp_path, monkeypatch, original, override, want) -> None:
     # Arrange
     if original is None:
-        monkeypatch.delenv("SBOM_TEST_OVERRIDE", raising=False)
+        monkeypatch.setenv("SBOM_TEST_OVERRIDE", "temporary")
+        monkeypatch.delenv("SBOM_TEST_OVERRIDE")
     else:
         monkeypatch.setenv("SBOM_TEST_OVERRIDE", original)
     env_file = tmp_path / ".env"
