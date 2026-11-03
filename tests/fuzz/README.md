@@ -6,7 +6,7 @@ and corpus mutation. It is not collected by pytest and adds no runtime dependenc
 
 ## Target and oracle
 
-`fuzz_project_lookup.py` feeds arbitrary HTTP 200 response bodies through the real
+`tests/fuzz/fuzz_project_lookup.py` feeds arbitrary HTTP 200 response bodies through the real
 `Client._send_request` JSON handling and `Client.find_project` validation. Imports
 of the client and Requests are instrumented before use; the callback is also
 instrumented. A fresh in-memory transport and response are created for each input.
@@ -61,13 +61,13 @@ Crash and timeout artifacts are written to `logs/fuzz/artifacts/`.
 Replace `crash-HASH` with the actual saved artifact filename:
 
 ```bash
-.venv/bin/python -m fuzz.fuzz_project_lookup logs/fuzz/artifacts/crash-HASH -runs=1
+.venv/bin/python tests/fuzz/fuzz_project_lookup.py logs/fuzz/artifacts/crash-HASH -runs=1
 ```
 
 Replay all checked-in seeds without starting a mutation campaign:
 
 ```bash
-.venv/bin/python -m fuzz.fuzz_project_lookup fuzz/corpus/project_lookup/* -runs=1
+.venv/bin/python tests/fuzz/fuzz_project_lookup.py tests/fuzz/corpus/project_lookup/* -runs=1
 ```
 
 Record the Python/Atheris versions, command, log, and failing input. Confirm that
