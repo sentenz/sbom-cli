@@ -165,7 +165,7 @@ FUZZ_SECONDS ?= 30
 FUZZ_CORPUS_DIR ?= logs/fuzz/corpus/project_lookup
 FUZZ_ARTIFACT_DIR ?= logs/fuzz/artifacts
 
-## Run a bounded Atheris coverage-guided campaign (requires the fuzz extra)
+## Run a bounded Atheris coverage-guided campaign (requires the Atheris dependency)
 test-fuzz-coverage:
 	@mkdir -p "$(FUZZ_CORPUS_DIR)" "$(FUZZ_ARTIFACT_DIR)"
 	$(FUZZ_PYTHON) tests/fuzz/fuzz_project_lookup.py \
@@ -195,8 +195,8 @@ test-coverage-check:
 	$(TEST_PYTEST) $(TEST_PYTEST_TARGETS) $(TEST_PYTEST_COVERAGE_ARGS) --cov-fail-under=80
 .PHONY: test-coverage-check
 
-## Run the full test suite with coverage
-test: test-setup test-coverage
+## Run the full test suite with coverage and a bounded Atheris smoke pass when supported
+test: test-setup test-fuzz-coverage test-coverage
 .PHONY: test
 
 # ─── Skills Manager ──────────────────────────────────────────────────────────────────────────────

@@ -24,13 +24,11 @@ where = ["src"]
 sbom = "sbom.cli:main"
 
 [project.optional-dependencies]
-fuzz = [
-  "atheris==3.1.0",
-]
 dev = [
   "pytest==9.2.0",
   "pytest-cov==7.1.0",
   "hypothesis==6.170.14",
+  "atheris==3.1.0",
   "isort==9.0.2",
   "black==26.10.1",
   "flake8==7.5.0",
