@@ -16,7 +16,7 @@
 #              sbom:latest upload -f /workspace/sbom.cdx.json
 # =============================================================================
 
-FROM python:3.15-slim@sha256:8c13a3f37a6a5b71498228e902c4b9f51c1f7900d49fabf71f9a650c6120e0d0 AS builder
+FROM python:3.15-slim@sha256:e97b88e416c3c01eb427b21fd8cd3ebf006e6ee38afcfcc3cae1c54ee2ab0a75 AS builder
 
 # Prevent Python from writing .pyc files and enable unbuffered, deterministic
 # output. PIP_NO_CACHE_DIR keeps the build context lean.
@@ -43,7 +43,7 @@ COPY src ./src
 # Install the package (and its runtime dependencies) into an isolated prefix.
 RUN python -m pip install --prefix=/install --no-warn-script-location .
 
-FROM python:3.15-slim@sha256:8c13a3f37a6a5b71498228e902c4b9f51c1f7900d49fabf71f9a650c6120e0d0 AS runtime
+FROM python:3.15-slim@sha256:e97b88e416c3c01eb427b21fd8cd3ebf006e6ee38afcfcc3cae1c54ee2ab0a75 AS runtime
 
 LABEL org.opencontainers.image.title="SBOM CLI" \
     org.opencontainers.image.description="Containerized CLI for SBOM operations against a Dependency-Track API server" \
