@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.4](https://github.com/sentenz/sbom-cli/compare/v1.0.3...v1.0.4) (2026-11-06)
+
+### Bug Fixes
+
+* **deps:** update container images ([#11](https://github.com/sentenz/sbom-cli/issues/11)) ([f027955](https://github.com/sentenz/sbom-cli/commit/f02795543cbed3a722efaf94fd6180a9c4c46061))
+
 ## [1.0.3](https://github.com/sentenz/sbom-cli/compare/v1.0.2...v1.0.3) (2026-11-03)
 
 ### Bug Fixes
