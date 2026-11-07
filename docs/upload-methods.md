@@ -58,7 +58,8 @@ sbom upload \
   --project-version "1.0.0"
 ```
 
-The TLS flags `--verify-ssl` and `--no-verify-ssl` take no value. Reserve `--no-verify-ssl` or `SBOM_VERIFY_SSL=false` for isolated local testing. The CLI logs a warning when verification is disabled.
+> [!NOTE]
+> The TLS flags `--verify-ssl` and `--no-verify-ssl` take no value. Reserve `--no-verify-ssl` or `SBOM_VERIFY_SSL=false` for isolated local testing. The CLI logs a warning when verification is disabled.
 
 ### 1.3. Environment Variables
 
