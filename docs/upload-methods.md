@@ -13,6 +13,7 @@ Upload a CycloneDX SBOM to Dependency-Track from a local Python installation, a 
   - [1.2. Command-Line Arguments](#12-command-line-arguments)
   - [1.3. Environment Variables](#13-environment-variables)
   - [1.4. Module Execution](#14-module-execution)
+  - [1.5. Config File](#15-config-file)
 - [2. Containerized CLI](#2-containerized-cli)
   - [2.1. Dotenv File](#21-dotenv-file)
   - [2.2. Environment Variables](#22-environment-variables)
@@ -81,6 +82,28 @@ Invoke the CLI module with the same trusted dotenv file.
 ```bash
 python -m sbom.cli --env-file .env upload -f logs/sbom/sbom-image.cdx.json
 ```
+
+### 1.5. Config File
+
+Save `.sbom.yml` in a trusted project directory. The CLI automatically reads this file from the current working directory when running `upload`. Supply `SBOM_API_KEY` through the environment.
+
+```yaml
+api-url: https://dependency-track.example.com
+verify-ssl: true
+project-name: MyProject
+project-version: "1.0.0"
+auto-create: true
+```
+
+Run the upload from the directory containing `.sbom.yml`.
+
+```bash
+cd /path/to/project
+sbom upload -f logs/sbom/sbom-image.cdx.json
+```
+
+> [!NOTE]
+> Configuration files are read in order from `/etc/sbom/config.yml`, `~/.sbom/config.yml`, and `.sbom.yml`, with later files taking precedence. Command-line flags, environment variables, and explicitly loaded dotenv values override configuration-file settings. See [configuration precedence](order-of-precedence.md) for details.
 
 ## 2. Containerized CLI
 
