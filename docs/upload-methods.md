@@ -53,15 +53,15 @@ Set `SBOM_API_KEY` in the process environment before running the command. Pass t
 
 - Invoke
 
-```bash
-sbom upload \
-  -f logs/sbom/sbom-image.cdx.json \
-  --api-url https://dependency-track.example.com \
-  --verify-ssl \
-  --auto-create \
-  --project-name "MyProject" \
-  --project-version "1.0.0"
-```
+  ```bash
+  sbom upload \
+    -f logs/sbom/sbom-image.cdx.json \
+    --api-url https://dependency-track.example.com \
+    --verify-ssl \
+    --auto-create \
+    --project-name "MyProject" \
+    --project-version "1.0.0"
+  ```
 
 > [!NOTE]
 > The TLS flags `--verify-ssl` and `--no-verify-ssl` take no value. Reserve `--no-verify-ssl` or `SBOM_VERIFY_SSL=false` for isolated local testing. The CLI logs a warning when verification is disabled.
@@ -72,24 +72,24 @@ Export the upload settings and supply `SBOM_API_KEY` through the environment, fo
 
 - Invoke
 
-```bash
-export SBOM_API_URL=https://dependency-track.example.com
-export SBOM_PROJECT_NAME="MyProject"
-export SBOM_PROJECT_VERSION="1.0.0"
-export SBOM_AUTO_CREATE=true
+  ```bash
+  export SBOM_API_URL=https://dependency-track.example.com
+  export SBOM_PROJECT_NAME="MyProject"
+  export SBOM_PROJECT_VERSION="1.0.0"
+  export SBOM_AUTO_CREATE=true
 
-sbom upload -f logs/sbom/sbom-image.cdx.json
-```
+  sbom upload -f logs/sbom/sbom-image.cdx.json
+  ```
 
 ### 1.4. Module Execution
 
-Invoke the CLI module with the a trusted dotenv file.
+Invoke the CLI module with a trusted dotenv file.
 
 - Invoke
 
-```bash
-python -m sbom.cli --env-file .env upload -f logs/sbom/sbom-image.cdx.json
-```
+  ```bash
+  python -m sbom.cli --env-file .env upload -f logs/sbom/sbom-image.cdx.json
+  ```
 
 ### 1.5. Config File
 
@@ -97,20 +97,20 @@ Save `.sbom.yml` in a trusted project directory. The CLI automatically reads thi
 
 - `.sbom.yml`
 
-```yaml
-api-url: https://dependency-track.example.com
-verify-ssl: true
-project-name: MyProject
-project-version: "1.0.0"
-auto-create: true
-```
+  ```yaml
+  api-url: https://dependency-track.example.com
+  verify-ssl: true
+  project-name: MyProject
+  project-version: "1.0.0"
+  auto-create: true
+  ```
 
 - Invoke
 
-```bash
-cd /path/to/project
-sbom upload -f logs/sbom/sbom-image.cdx.json
-```
+  ```bash
+  cd /path/to/project
+  sbom upload -f logs/sbom/sbom-image.cdx.json
+  ```
 
 > [!NOTE]
 > Configuration files are read in [configuration precedence](order-of-precedence.md) from `/etc/sbom/config.yml`, `~/.sbom/config.yml`, and `.sbom.yml`, with later files taking precedence. Command-line flags, environment variables, and explicitly loaded dotenv values override configuration-file settings.
@@ -121,9 +121,9 @@ Build the `sbom:latest` image from the repository root before running these exam
 
 - Invoke
 
-```bash
-make container-docker-build CONTAINER_IMAGE=sbom CONTAINER_TAG=latest
-```
+  ```bash
+  make container-docker-build CONTAINER_IMAGE=sbom CONTAINER_TAG=latest
+  ```
 
 ### 2.1. Dotenv File
 
@@ -131,13 +131,13 @@ Docker reads the trusted `.env` file and passes its values into the container. D
 
 - Invoke
 
-```bash
-docker run --rm \
-  --env-file .env \
-  -v "$(pwd)/logs/sbom:/workspace/sbom:ro" \
-  sbom:latest \
-  upload -f /workspace/sbom/sbom-image.cdx.json
-```
+  ```bash
+  docker run --rm \
+    --env-file .env \
+    -v "$(pwd)/logs/sbom:/workspace/sbom:ro" \
+    sbom:latest \
+    upload -f /workspace/sbom/sbom-image.cdx.json
+  ```
 
 ### 2.2. Environment Variables
 
@@ -145,17 +145,17 @@ Export `SBOM_API_KEY` in the calling shell. Docker's `-e SBOM_API_KEY` forwards 
 
 - Invoke
 
-```bash
-docker run --rm \
-  -e SBOM_API_URL=https://dependency-track.example.com \
-  -e SBOM_API_KEY \
-  -e SBOM_PROJECT_NAME="Docker-Project" \
-  -e SBOM_PROJECT_VERSION="1.0.0" \
-  -e SBOM_AUTO_CREATE=true \
-  -v "$(pwd)/logs/sbom:/workspace/sbom:ro" \
-  sbom:latest \
-  upload -f /workspace/sbom/sbom-image.cdx.json
-```
+  ```bash
+  docker run --rm \
+    -e SBOM_API_URL=https://dependency-track.example.com \
+    -e SBOM_API_KEY \
+    -e SBOM_PROJECT_NAME="Docker-Project" \
+    -e SBOM_PROJECT_VERSION="1.0.0" \
+    -e SBOM_AUTO_CREATE=true \
+    -v "$(pwd)/logs/sbom:/workspace/sbom:ro" \
+    sbom:latest \
+    upload -f /workspace/sbom/sbom-image.cdx.json
+  ```
 
 ### 2.3. Docker Compose
 
@@ -163,29 +163,29 @@ Export `SBOM_API_KEY` before invoking Compose. Save the service definition in `c
 
 - `compose.yaml`
 
-```yaml
-services:
-  sbom:
-    image: sbom:latest
-    environment:
-      SBOM_API_URL: https://dependency-track.example.com
-      SBOM_API_KEY: "${SBOM_API_KEY:?Set SBOM_API_KEY}"
-      SBOM_PROJECT_NAME: docker-compose-project
-      SBOM_PROJECT_VERSION: "1.0.0"
-      SBOM_AUTO_CREATE: "true"
-    volumes:
-      - ./logs/sbom:/workspace/sbom:ro
-    command:
-      - upload
-      - -f
-      - /workspace/sbom/sbom-image.cdx.json
-```
+  ```yaml
+  services:
+    sbom:
+      image: sbom:latest
+      environment:
+        SBOM_API_URL: https://dependency-track.example.com
+        SBOM_API_KEY: "${SBOM_API_KEY:?Set SBOM_API_KEY}"
+        SBOM_PROJECT_NAME: docker-compose-project
+        SBOM_PROJECT_VERSION: "1.0.0"
+        SBOM_AUTO_CREATE: "true"
+      volumes:
+        - ./logs/sbom:/workspace/sbom:ro
+      command:
+        - upload
+        - -f
+        - /workspace/sbom/sbom-image.cdx.json
+  ```
 
 - Invoke
 
-```bash
-docker compose run --rm sbom
-```
+  ```bash
+  docker compose run --rm sbom
+  ```
 
 ### 2.4. Make Task
 
@@ -193,21 +193,21 @@ Use `sbom-upload` with a trusted dotenv file and the locally built image. The ta
 
 - Invoke
 
-```bash
-make sbom-upload \
-  SBOM_CONTAINER_IMAGE=sbom:latest \
-  SBOM_FILE_ENV=.env \
-  SBOM_FILE_CDX=logs/sbom/sbom-image.cdx.json
-```
+  ```bash
+  make sbom-upload \
+    SBOM_CONTAINER_IMAGE=sbom:latest \
+    SBOM_FILE_ENV=.env \
+    SBOM_FILE_CDX=logs/sbom/sbom-image.cdx.json
+  ```
 
 To use the environment variables from [section 1.3](#13-environment-variables), including the injected API key, run `container-docker-run`.
 
 - Invoke
 
-```bash
-make container-docker-run CONTAINER_IMAGE=sbom CONTAINER_TAG=latest \
-  ARGS="upload -f logs/sbom/sbom-image.cdx.json"
-```
+  ```bash
+  make container-docker-run CONTAINER_IMAGE=sbom CONTAINER_TAG=latest \
+    ARGS="upload -f logs/sbom/sbom-image.cdx.json"
+  ```
 
 ## 3. Upload Patterns
 
@@ -220,13 +220,13 @@ Supply both the project name and version with `--auto-create`.
 
 - Invoke
 
-```bash
-sbom upload \
-  -f logs/sbom/sbom-image.cdx.json \
-  --auto-create \
-  --project-name "MyProject" \
-  --project-version "1.0.0"
-```
+  ```bash
+  sbom upload \
+    -f logs/sbom/sbom-image.cdx.json \
+    --auto-create \
+    --project-name "MyProject" \
+    --project-version "1.0.0"
+  ```
 
 ### 3.2. Upload to an existing project
 
@@ -234,12 +234,12 @@ Use the existing project's exact name and version. Ensure `SBOM_AUTO_CREATE` and
 
 - Invoke
 
-```bash
-sbom upload \
-  -f logs/sbom/sbom-image.cdx.json \
-  --project-name "MyProject" \
-  --project-version "1.0.0"
-```
+  ```bash
+  sbom upload \
+    -f logs/sbom/sbom-image.cdx.json \
+    --project-name "MyProject" \
+    --project-version "1.0.0"
+  ```
 
 ### 3.3. Set project metadata
 
@@ -247,14 +247,14 @@ Add a custom project name, version, and tags to group uploaded SBOMs by applicat
 
 - Invoke
 
-```bash
-sbom upload -f logs/sbom/sbom-image.cdx.json \
-  --auto-create \
-  --project-name "MyApp" \
-  --project-version "2.1.0" \
-  --project-tags "production,security"
-```
+  ```bash
+  sbom upload -f logs/sbom/sbom-image.cdx.json \
+    --auto-create \
+    --project-name "MyApp" \
+    --project-version "2.1.0" \
+    --project-tags "production,security"
+  ```
 
 ## 4. References
 
-- SBOM CLI [configuration precedence](order-of-precedence.md) settings interact.
+- SBOM CLI [configuration precedence](order-of-precedence.md) explains how configuration settings interact.
