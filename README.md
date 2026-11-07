@@ -140,10 +140,10 @@ The SBOM tool provides a command-line interface (CLI) for managing Software Bill
 
 - Python CLI
 
-  Uses the built-in `sbom` Python CLI tool.
+  Uses the installed `sbom` command and a [trusted dotenv file](docs/upload-methods.md#11-dotenv-file).
 
   ```bash
-  make sbom-upload logs/sbom/sbom-image.cdx.json
+  sbom --env-file .env upload -f logs/sbom/sbom-image.cdx.json
   ```
 
 - Containerized CLI
@@ -151,7 +151,8 @@ The SBOM tool provides a command-line interface (CLI) for managing Software Bill
   Uses the containerized version of the `sbom` CLI tool.
 
   ```bash
-  make container-docker-run ARGS="upload -f logs/sbom/sbom-image.cdx.json"
+  make container-docker-run CONTAINER_IMAGE=sbom CONTAINER_TAG=latest \
+    ARGS="upload -f logs/sbom/sbom-image.cdx.json"
   ```
 
 ### 2.3. Access Control
