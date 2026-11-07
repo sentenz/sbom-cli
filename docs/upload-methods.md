@@ -2,7 +2,8 @@
 
 Upload a CycloneDX SBOM to Dependency-Track from a local Python installation, a container, or a CI pipeline. Replace `https://dependency-track.example.com` with the HTTPS base URL of the Dependency-Track API as seen from the environment running the CLI.
 
-Use an API key with `BOM_UPLOAD` and add `PROJECT_CREATION_UPLOAD` when using `--auto-create`. Inject `SBOM_API_KEY` from a secret store or keep it in a trusted, untracked dotenv file.
+> [!NOTE]
+> Use an API key with `BOM_UPLOAD` and add `PROJECT_CREATION_UPLOAD` when using `--auto-create`. Inject `SBOM_API_KEY` from a secret store or keep it in a trusted, untracked dotenv file.
 
 > [!IMPORTANT]
 > TLS certificate verification is enabled by default. Use an API endpoint with a certificate trusted by the CLI runtime. The CLI rejects HTTP redirects, so configure the API base URL that serves upload requests directly.
