@@ -257,4 +257,4 @@ Add a custom project name, version, and tags to group uploaded SBOMs by applicat
 
 ## 4. References
 
-- SBOM CLI [configuration precedence](order-of-precedence.md) explains how configuration settings interact.
+- SBOM CLI [configuration precedence](order-of-precedence.md) settings interact.
