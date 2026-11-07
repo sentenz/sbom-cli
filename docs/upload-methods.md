@@ -77,7 +77,7 @@ sbom upload -f logs/sbom/sbom-image.cdx.json
 
 ### 1.4. Module Execution
 
-Invoke the CLI module with the same trusted dotenv file.
+Invoke the CLI module with the a trusted dotenv file.
 
 ```bash
 python -m sbom.cli --env-file .env upload -f logs/sbom/sbom-image.cdx.json
@@ -103,7 +103,7 @@ sbom upload -f logs/sbom/sbom-image.cdx.json
 ```
 
 > [!NOTE]
-> Configuration files are read in order from `/etc/sbom/config.yml`, `~/.sbom/config.yml`, and `.sbom.yml`, with later files taking precedence. Command-line flags, environment variables, and explicitly loaded dotenv values override configuration-file settings. See [configuration precedence](order-of-precedence.md) for details.
+> Configuration files are read in [configuration precedence](order-of-precedence.md) from `/etc/sbom/config.yml`, `~/.sbom/config.yml`, and `.sbom.yml`, with later files taking precedence. Command-line flags, environment variables, and explicitly loaded dotenv values override configuration-file settings.
 
 ## 2. Containerized CLI
 
@@ -115,7 +115,7 @@ make container-docker-build CONTAINER_IMAGE=sbom CONTAINER_TAG=latest
 
 ### 2.1. Dotenv File
 
-In this command Docker reads the trusted `.env` file and passes its values into the container. Docker's `--env-file` appears before the image name. The CLI's `--env-file` appears after the image name and takes a path inside the container.
+Docker reads the trusted `.env` file and passes its values into the container. Docker's `--env-file` appears before the image name. The CLI's `--env-file` appears after the image name and takes a path inside the container.
 
 ```bash
 docker run --rm \
@@ -169,7 +169,7 @@ docker compose run --rm sbom
 
 ### 2.4. Make Task
 
-Use `sbom-upload` with a trusted dotenv file and the locally built image. The target passes `--env-file` to the CLI inside the container and writes the output to `logs/sbom/upload.log`. Run Make from a trusted checkout because the Makefile also includes local `.env` and `.env.*` files, excluding `*.enc` files.
+Use `sbom-upload` with a trusted dotenv file and the locally built image. The target passes `--env-file` to the CLI inside the container and writes the output to `logs/sbom/upload.log`.
 
 ```bash
 make sbom-upload \
@@ -187,7 +187,8 @@ make container-docker-run CONTAINER_IMAGE=sbom CONTAINER_TAG=latest \
 
 ## 3. Upload Patterns
 
-These examples assume `SBOM_API_URL` and `SBOM_API_KEY` are already available in the environment.
+> [!NOTE]
+> The examples assume `SBOM_API_URL` and `SBOM_API_KEY` are already available in the environment.
 
 ### 3.1. Upload to a new project
 
