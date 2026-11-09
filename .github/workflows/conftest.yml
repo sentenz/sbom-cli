@@ -36,7 +36,7 @@ jobs:
           persist-credentials: false
 
       - name: Check Dockerfile policy
-        uses: sentenz/actions/conftest@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
+        uses: sentenz/actions/conftest@4e9e78d246486ad62d8df160a4d07020ece9668a # 1.5.6
         with:
           path: Dockerfile
           policy-path: ./tests/policy
@@ -45,7 +45,7 @@ jobs:
           all-namespaces: "false"
 
       - name: Check Python project policy
-        uses: sentenz/actions/conftest@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
+        uses: sentenz/actions/conftest@4e9e78d246486ad62d8df160a4d07020ece9668a # 1.5.6
         with:
           path: pyproject.toml
           policy-path: ./tests/policy

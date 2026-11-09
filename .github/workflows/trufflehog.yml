@@ -25,6 +25,6 @@ jobs:
           persist-credentials: false
 
       - name: Scan for secrets
-        uses: sentenz/actions/trufflehog@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
+        uses: sentenz/actions/trufflehog@4e9e78d246486ad62d8df160a4d07020ece9668a # 1.5.6
         with:
           path: ./
