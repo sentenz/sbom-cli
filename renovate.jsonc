@@ -107,8 +107,7 @@
     {
       "description": "Group container image digest bumps across Dockerfiles and Containerfiles.",
       "matchManagers": [
-        "dockerfile",
-        "containerfile"
+        "dockerfile"
       ],
       "matchDatasources": [
         "docker"
