@@ -24,20 +24,21 @@ concurrency:
 
 jobs:
   sbom:
-    name: Generate, Scan and Publish Release SBOMs
+    name: Generate, Scan, Sign and Publish Release SBOMs
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
       contents: write
+      id-token: write
     steps:
       - name: Checkout release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.version }}
+          ref: refs/tags/${{ inputs.version }}
           persist-credentials: false
 
       - name: Generate SBOM (CycloneDX)
-        uses: sentenz/actions/trivy@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
+        uses: sentenz/actions/trivy@ac68a6837f8890c4570767c0d1f21bcfc133ab1a # 1.5.8
         with:
           scan-type: sbom-generate
           scan-target: "."
@@ -45,7 +46,7 @@ jobs:
           output: sbom.cdx.json
 
       - name: Generate SBOM (SPDX)
-        uses: sentenz/actions/trivy@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
+        uses: sentenz/actions/trivy@ac68a6837f8890c4570767c0d1f21bcfc133ab1a # 1.5.8
         with:
           scan-type: sbom-generate
           scan-target: "."
@@ -53,25 +54,38 @@ jobs:
           output: sbom.spdx.json
 
       - name: Scan SBOM (SPDX)
-        uses: sentenz/actions/trivy@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
+        uses: sentenz/actions/trivy@ac68a6837f8890c4570767c0d1f21bcfc133ab1a # 1.5.8
         with:
+          exit-code: "1"
           scan-type: sbom
           scan-target: sbom.spdx.json
         continue-on-error: false
 
       - name: Scan SBOM (CycloneDX)
-        uses: sentenz/actions/trivy@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
+        uses: sentenz/actions/trivy@ac68a6837f8890c4570767c0d1f21bcfc133ab1a # 1.5.8
         with:
+          exit-code: "1"
           scan-type: sbom
           scan-target: sbom.cdx.json
         continue-on-error: false
 
-      - name: Publish release SBOM assets
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+      - name: Sign and Verify Artifacts
+        uses: sentenz/actions/sigstore@48508443507cf772331e323ab90665657a1976ac # 1.6.0
         with:
-          tag_name: ${{ inputs.version }}
+          identity: ${{ github.server_url }}/${{ job.workflow_ref }}
           files: |
             sbom.cdx.json
             sbom.spdx.json
+
+      - name: Publish Release Assets
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
+        with:
+          tag_name: ${{ inputs.version }}
+          fail_on_unmatched_files: true
+          files: |
+            sbom.cdx.json
+            sbom.cdx.json.sigstore.json
+            sbom.spdx.json
+            sbom.spdx.json.sigstore.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
