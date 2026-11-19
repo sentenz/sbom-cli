@@ -3,12 +3,9 @@
 name: SBOM
 
 on:
-  workflow_call:
-    inputs:
-      version:
-        description: Git release tag (for example, v1.2.3)
-        required: true
-        type: string
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
   workflow_dispatch:
     inputs:
       version:
@@ -19,12 +16,13 @@ on:
 permissions: {}
 
 concurrency:
-  group: sbom-${{ inputs.version }}
+  group: sbom-${{ inputs.version || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
   sbom:
     name: Generate, Scan, Sign and Publish Release SBOMs
+    if: github.event_name == 'workflow_dispatch' || github.event.deleted != true
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -34,7 +32,7 @@ jobs:
       - name: Checkout release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: refs/tags/${{ inputs.version }}
+          ref: ${{ github.event_name == 'push' && github.sha || format('refs/tags/{0}', inputs.version) }}
           persist-credentials: false
 
       - name: Generate SBOM (CycloneDX)
@@ -72,7 +70,7 @@ jobs:
       - name: Sign and Verify Artifacts
         uses: sentenz/actions/sigstore@23361c53dc10a0980b449d78bb4481e4997da7d3 # 1.7.1
         with:
-          identity: ${{ github.server_url }}/${{ job.workflow_ref }}
+          identity: ${{ github.server_url }}/${{ github.workflow_ref }}
           files: |
             sbom.cdx.json
             sbom.spdx.json
@@ -80,7 +78,7 @@ jobs:
       - name: Publish Release Assets
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
-          tag_name: ${{ inputs.version }}
+          tag_name: ${{ inputs.version || github.ref_name }}
           fail_on_unmatched_files: true
           files: |
             sbom.cdx.json
