@@ -13,23 +13,17 @@ on:
       - "README.md"
       - "src/**"
       - ".github/workflows/docker-sigstor.yml"
-  workflow_call:
-    inputs:
-      publish:
-        description: Publish the container image to GHCR
-        required: true
-        type: boolean
-      version:
-        description: Container image version and existing Git release tag (for example, v1.2.3)
-        required: true
-        type: string
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+  # Select an existing tag when dispatching a recovery run.
+  workflow_dispatch:
 
 concurrency:
   group: docker-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   build:
@@ -37,25 +31,25 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Build container image
+      - name: Run Docker Build
         uses: sentenz/actions/docker@23361c53dc10a0980b449d78bb4481e4997da7d3 # 1.7.1
         with:
           version: pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
-          context: .
-          file: Dockerfile
           image-name: sbom-cli
           platforms: linux/amd64,linux/arm64
           push: false
 
   publish:
     name: Docker Action - Publish
-    if: inputs.publish
+    if: github.ref_type == 'tag' && github.event.deleted != true
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -63,22 +57,21 @@ jobs:
       packages: write
       id-token: write
     steps:
-      - name: Checkout release tag
+      - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: refs/tags/${{ inputs.version }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
-      - name: Publish attested container image to GHCR
+      - name: Publish Attested Image
         id: docker-build
         uses: sentenz/actions/docker@23361c53dc10a0980b449d78bb4481e4997da7d3 # 1.7.1
         with:
-          version: ${{ inputs.version }}
-          context: .
-          file: Dockerfile
+          version: ${{ github.ref_name }}
           image-name: sbom-cli
           platforms: linux/amd64,linux/arm64
           push: true
+          publish-latest: false
           provenance: mode=max
           sbom: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -87,12 +80,12 @@ jobs:
         uses: sentenz/actions/sigstore@23361c53dc10a0980b449d78bb4481e4997da7d3 # 1.7.1
         with:
           image: ${{ steps.docker-build.outputs.image }}@${{ steps.docker-build.outputs.digest }}
-          identity: ${{ github.server_url }}/${{ job.workflow_ref }}
+          identity: ${{ github.server_url }}/${{ github.workflow_ref }}
 
       - name: Retain Verification Bundle
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: image-signature-${{ inputs.version }}-${{ github.run_attempt }}
+          name: image-signature-${{ github.run_id }}-${{ github.run_attempt }}
           path: image.sigstore.json
           if-no-files-found: error
           retention-days: 90
