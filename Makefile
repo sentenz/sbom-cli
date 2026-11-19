@@ -443,6 +443,57 @@ sbom-upload:
 	$(SBOM_CONTAINER_ALIAS) --env-file "$(SBOM_FILE_ENV)" upload --file "$(SBOM_FILE_CDX)" 2>&1 | tee logs/sbom/upload.log
 .PHONY: sbom-upload
 
+# ─── Software Supply Chain Security (SSCS) ──────────────────────────────────────────────────────────────────────────
+
+# Usage: make sscs-verify SSCS_TAG=v1.2.3
+# Requires Cosign 3, ORAS, jq, gh, and read access to GHCR and GitHub releases.
+export SSCS_TAG
+SSCS_ISSUER := https://token.actions.githubusercontent.com
+SSCS_WORKFLOWS := https://github.com/sentenz/sbom-cli/.github/workflows
+
+## Verify the release image signature and both platforms' BuildKit provenance and SPDX attestations
+sscs-verify-image:
+	@: "$${SSCS_TAG:?Set SSCS_TAG to the release tag (e.g. v1.2.3)}"
+	image=ghcr.io/sentenz/sbom-cli
+	digest=$$(oras manifest fetch --descriptor "$$image:$$SSCS_TAG" | jq -er '.digest | select(test("^sha256:[0-9a-f]{64}$$"))')
+	cosign verify --certificate-oidc-issuer "$(SSCS_ISSUER)" \
+		--certificate-identity "$(SSCS_WORKFLOWS)/docker-sigstor.yml@refs/tags/$$SSCS_TAG" "$$image@$$digest"
+	index=$$(oras manifest fetch "$$image@$$digest")
+	for arch in amd64 arm64; do
+		subject=$$(jq -er --arg arch "$$arch" '.manifests[] | select(.platform.os == "linux" and .platform.architecture == $$arch) | .digest' <<<"$$index")
+		attestation=$$(jq -er --arg subject "$$subject" '.manifests[] | select(.annotations["vnd.docker.reference.type"] == "attestation-manifest" and .annotations["vnd.docker.reference.digest"] == $$subject) | .digest' <<<"$$index")
+		manifest=$$(oras manifest fetch "$$image@$$attestation")
+		for kind in provenance sbom; do
+			case "$$kind" in
+				provenance) types='["https://slsa.dev/provenance/v0.2","https://slsa.dev/provenance/v1"]' ;;
+				sbom) types='["https://spdx.dev/Document"]' ;;
+			esac
+			echo "Checking linux/$$arch $$kind for $$subject"
+			layer=$$(jq -er --argjson types "$$types" '.layers[] | select(.mediaType == "application/vnd.in-toto+json") | select(.annotations["in-toto.io/predicate-type"] as $$t | $$types | index($$t)) | .digest' <<<"$$manifest")
+			oras blob fetch --output - "$$image@$$layer" | jq -se --arg sha "$${subject#sha256:}" --argjson types "$$types" \
+				'length == 1 and (.[0] | (.predicateType as $$t | $$types | index($$t) != null) and any(.subject[]; .digest.sha256 == $$sha) and (.predicate | type == "object" and length > 0))' >/dev/null
+		done
+	done
+.PHONY: sscs-verify-image
+
+## Verify the CycloneDX and SPDX release files against their Sigstore bundles
+sscs-verify-sbom:
+	@: "$${SSCS_TAG:?Set SSCS_TAG to the release tag (e.g. v1.2.3)}"
+	dir=$$(mktemp -d)
+	trap 'rm -rf -- "$$dir"' EXIT
+	gh release download "$$SSCS_TAG" --repo github.com/sentenz/sbom-cli --dir "$$dir" \
+		--pattern 'sbom.cdx.json*' --pattern 'sbom.spdx.json*'
+	for file in sbom.cdx.json sbom.spdx.json; do
+		cosign verify-blob --certificate-oidc-issuer "$(SSCS_ISSUER)" \
+			--certificate-identity "$(SSCS_WORKFLOWS)/trivy-sbom-sigstore.yml@refs/tags/$$SSCS_TAG" \
+			--bundle "$$dir/$$file.sigstore.json" "$$dir/$$file"
+	done
+.PHONY: sscs-verify-sbom
+
+## Verify the signed release image, its attestations, and both signed release SBOMs
+sscs-verify: sscs-verify-image sscs-verify-sbom
+.PHONY: sscs-verify
+
 # ─── SAST Manager ────────────────────────────────────────────────────────────────────────────────
 
 SAST_SEMGREP_IMAGE ?= semgrep/semgrep:1.183.0@sha256:2e45517a85e13a9cca14a2a00df6bb48affd66b8ebfae1b0991cd57578362fb0
