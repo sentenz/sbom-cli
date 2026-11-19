@@ -6,3 +6,7 @@ misconfigurations:
       - ".devcontainer/go/Dockerfile"
       - ".devcontainer/python/Dockerfile"
     statement: "Dev Containers use the non-root vscode user provided by the base image or common-utils feature and set remoteUser to vscode."
+  - id: AVD-DS-0017
+    paths:
+      - ".devcontainer/python/Dockerfile"
+    statement: "The Python development container refreshes the APT index before purging ImageMagick packages inherited from the base image."
