@@ -26,8 +26,23 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Prepare release token
+        id: auth
+        shell: python
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          import os
+
+          token = os.environ['RELEASE_TOKEN'].strip()
+          if not token or any(c.isspace() for c in token):
+              raise SystemExit('RELEASE_TOKEN must contain a single token')
+          print(f'::add-mask::{token}', flush=True)
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              print(f'token={token}', file=output)
+
       - name: Run Semantic Release
         uses: sentenz/actions/semantic-release@23361c53dc10a0980b449d78bb4481e4997da7d3 # 1.7.1
         with:
-          github-token: ${{ secrets.RELEASE_TOKEN }}
+          github-token: ${{ steps.auth.outputs.token }}
           semantic-version: "25.0.3"
