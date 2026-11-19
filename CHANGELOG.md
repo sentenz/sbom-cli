@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.5](https://github.com/sentenz/sbom-cli/compare/v1.0.4...v1.0.5) (2026-11-19)
+
+### Bug Fixes
+
+* **deps:** update python:3.15-slim docker digest to 65a65fc ([#13](https://github.com/sentenz/sbom-cli/issues/13)) ([b699a26](https://github.com/sentenz/sbom-cli/commit/b699a26b01bb6c7f751cd0b090a1bcf5f6a8f8ee))
+
 ## [1.0.4](https://github.com/sentenz/sbom-cli/compare/v1.0.3...v1.0.4) (2026-11-06)
 
 ### Bug Fixes
