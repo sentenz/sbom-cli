@@ -12,7 +12,7 @@ on:
       - "pyproject.toml"
       - "README.md"
       - "src/**"
-      - ".github/workflows/docker.yml"
+      - ".github/workflows/docker-sigstor.yml"
   workflow_call:
     inputs:
       publish:

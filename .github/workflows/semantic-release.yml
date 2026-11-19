@@ -46,7 +46,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
-    uses: ./.github/workflows/sbom.yml
+    uses: ./.github/workflows/trivy-sbom-sigstore.yml
     with:
       version: ${{ needs.semantic-release.outputs.new-release-tag }}
 
@@ -58,7 +58,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
-    uses: ./.github/workflows/docker.yml
+    uses: ./.github/workflows/docker-sigstor.yml
     with:
       publish: true
       version: ${{ needs.semantic-release.outputs.new-release-tag }}
