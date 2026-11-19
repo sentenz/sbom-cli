@@ -6,9 +6,6 @@ on:
   push:
     branches:
       - main
-      - next
-      - beta
-      - alpha
 
 permissions: {}
 
@@ -21,47 +18,16 @@ jobs:
     name: Semantic-Release Action
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      issues: write
-      pull-requests: write
-      id-token: write
-    outputs:
-      new-release-published: ${{ steps.release.outputs.new-release-published }}
-      new-release-version: ${{ steps.release.outputs.new-release-version }}
+      contents: read
     steps:
       - name: Checkout (full history)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          # Retained: the existing release config uses @semantic-release/git.
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Run Semantic Release
-        id: release
-        uses: sentenz/actions/semantic-release@cfa8ce409cbcfbce8bd5534108b145e185bb2406 # 1.5.5
+        uses: sentenz/actions/semantic-release@23361c53dc10a0980b449d78bb4481e4997da7d3 # 1.7.1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          semantic-version: "latest"
-          tag-format: "v${version}"
-
-  sbom:
-    name: Generate and publish release SBOMs
-    needs: semantic-release
-    if: needs.semantic-release.outputs.new-release-published == 'true'
-    permissions:
-      contents: write
-    uses: ./.github/workflows/sbom.yml
-    with:
-      version: v${{ needs.semantic-release.outputs.new-release-version }}
-
-  docker:
-    name: Build and publish release container image
-    needs: semantic-release
-    if: needs.semantic-release.outputs.new-release-published == 'true'
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/docker.yml
-    with:
-      publish: true
-      version: v${{ needs.semantic-release.outputs.new-release-version }}
+          github-token: ${{ secrets.RELEASE_TOKEN }}
+          semantic-version: "25.0.3"
