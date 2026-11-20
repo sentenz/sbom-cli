@@ -451,6 +451,8 @@ export SSCS_TAG
 SSCS_ISSUER := https://token.actions.githubusercontent.com
 SSCS_WORKFLOWS := https://github.com/sentenz/sbom-cli/.github/workflows
 
+# Usage: make sscs-verify-image SSCS_TAG=v1.2.3
+#
 ## Verify the release image signature and both platforms' BuildKit provenance and SPDX attestations
 sscs-verify-image:
 	@: "$${SSCS_TAG:?Set SSCS_TAG to the release tag (e.g. v1.2.3)}"
@@ -476,6 +478,8 @@ sscs-verify-image:
 	done
 .PHONY: sscs-verify-image
 
+# Usage: make sscs-verify-sbom SSCS_TAG=v1.2.3
+#
 ## Verify the CycloneDX and SPDX release files against their Sigstore bundles
 sscs-verify-sbom:
 	@: "$${SSCS_TAG:?Set SSCS_TAG to the release tag (e.g. v1.2.3)}"
