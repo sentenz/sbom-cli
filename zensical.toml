@@ -3,13 +3,13 @@ site_name = "SBOM CLI"
 repo_url = "https://github.com/sentenz/sbom-cli"
 nav = [
   { Home = "index.md" },
-  { Guides = [
-    { "Upload methods" = "upload-methods.md" },
+  { Guidance = [
+    { "Invocation" = "upload-methods.md" },
     { "REST API" = "rest-api.md" },
-    { "Configuration precedence" = "order-of-precedence.md" },
+    { "Configuration Precedence" = "order-of-precedence.md" },
     { Troubleshooting = "troubleshoot.md" },
   ] },
-  { "Architecture decisions" = [
+  { "Architecture Decisions" = [
     { "ADR-001 · Python docstrings" = "decisions/adr-001-docstrings-style-python.md" },
   ] },
 ]
