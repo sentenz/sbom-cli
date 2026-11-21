@@ -1,0 +1,28 @@
+[project]
+site_name = "SBOM CLI"
+repo_url = "https://github.com/sentenz/sbom-cli"
+nav = [
+  { Home = "index.md" },
+  { Guides = [
+    { "Upload methods" = "upload-methods.md" },
+    { "REST API" = "rest-api.md" },
+    { "Configuration precedence" = "order-of-precedence.md" },
+    { Troubleshooting = "troubleshoot.md" },
+  ] },
+  { "Architecture decisions" = [
+    { "ADR-001 · Python docstrings" = "decisions/adr-001-docstrings-style-python.md" },
+  ] },
+]
+
+[project.plugins.mkdocstrings.handlers.python]
+paths = ["src"]
+
+[project.plugins.mkdocstrings.handlers.python.options]
+docstring_style = "google"
+merge_init_into_class = true
+show_source = false
+
+[project.plugins.api-autonav]
+# Discover from the package root to retain fully qualified names in the reference.
+modules = ["src/sbom"]
+exclude = ['re:^(?!sbom\.client$|sbom\.utils\.exceptions$)']

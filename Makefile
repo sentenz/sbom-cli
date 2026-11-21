@@ -111,6 +111,23 @@ sbom-cli-delete:
 	@$(SBOM_CLI) delete
 .PHONY: sbom-cli-delete
 
+# ─── Documentation ───────────────────────────────────────────────────────────────────────────────
+
+## Install the documentation dependencies in the project virtual environment
+docs-setup: setup
+	@$(PYTHON_VENV)/bin/python -m pip install --quiet -e ".[docs]"
+.PHONY: docs-setup
+
+## Build the documentation into site/ and fail on warnings
+docs-build:
+	$(PYTHON_VENV)/bin/zensical build --clean --strict
+.PHONY: docs-build
+
+## Serve the documentation locally with live reload
+docs-serve:
+	$(PYTHON_VENV)/bin/zensical serve
+.PHONY: docs-serve
+
 # ─── Analysis ────────────────────────────────────────────────────────────────────────────────────
 
 # Verify that imports are sorted according to isort rules
