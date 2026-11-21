@@ -1,0 +1,13 @@
+[project]
+site_name = "SBOM CLI"
+site_description = "Command-line reference and configuration for the Dependency-Track SBOM client."
+site_url = "https://sentenz.github.io/sbom-cli/"
+repo_url = "https://github.com/sentenz/sbom-cli"
+nav = [
+  { "Overview" = "index.md" },
+  { "CLI reference" = "cli.md" },
+  { "Configuration precedence" = "order-of-precedence.md" },
+  { "Upload methods" = "upload-methods.md" },
+  { "REST API" = "rest-api.md" },
+  { "Troubleshooting" = "troubleshoot.md" },
+]

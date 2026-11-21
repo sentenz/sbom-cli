@@ -1,123 +1,42 @@
-# Order of Precedence
+# Configuration precedence
 
-The [Command Line Interface (CLI)](https://clig.dev/) supports multiple configuration sources with a specific order of precedence.
+For each option on `upload` or `delete`, the first source that supplies a value wins. Different options in the same invocation can come from different sources.
 
-- [1. CLI](#1-cli)
-  - [1.1. Configuration File Precedence](#11-configuration-file-precedence)
-  - [1.2. Supported Configuration Sources](#12-supported-configuration-sources)
-  - [1.3. Examples and Explanation](#13-examples-and-explanation)
-  - [1.4. Table of Comparison](#14-table-of-comparison)
-- [2. References](#2-references)
+| Priority | Source | Example for the project name |
+| --- | --- | --- |
+| 1 | Command-line option after the command | `--project-name api` |
+| 2 | Process environment | `SBOM_PROJECT_NAME=ci` |
+| 3 | Dotenv file selected with the root option `--env-file` | `SBOM_PROJECT_NAME=staging` |
+| 4 | Configuration file | `project-name: baseline` |
+| 5 | Parser default | Project name is unset |
 
-## 1. CLI
+The CLI loads a trusted dotenv file with `python-dotenv` before ConfigArgParse resolves command options. Existing environment variables retain their values. A local `.env` takes effect only when selected explicitly, and the path must identify an existing file.
 
-### 1.1. Configuration File Precedence
+## Configuration files
 
-> [!NOTE]
-> The SBOM CLI supports multiple configuration sources in order of priority (highest → lowest).
+For each command, ConfigArgParse reads the following files when present. A later file overrides an earlier file for the same key.
 
-1. Command-Line Flags
-2. Environment Variables (Env Vars)
-3. Dotenv Files (`.env`)
-4. Config Files (`.sbom.yml`)
-5. Default Variables
+1. `/etc/sbom/config.yml` (system)
+2. `~/.sbom/config.yml` (user)
+3. `.sbom.yml` in the current working directory (project)
 
-### 1.2. Supported Configuration Sources
+Use flat key-value entries. The [CLI reference](cli.md) lists the keys and environment bindings accepted by each command. Keep shared configuration to keys recognized by every command that will read it. For example, `auto-create` belongs to `upload` and produces an argument error with `delete`.
 
-- [x] Command-Line Flags
-- [x] Environment Variables (Env Vars)
-- [x] Dotenv Files (`.env`)
-- [x] Config Files (`.sbom.yml`)
-- [x] Default Variables
+## Worked example
 
-### 1.3. Examples and Explanation
+Save the project settings in `.sbom.yml`.
 
-- Command-line Flags (CLI)
-  > Command-line flags have the highest precedence and will override any other configuration source.
+```yaml
+api-url: https://dependency-track.example.com
+project-name: baseline
+project-version: 1.0.0
+```
 
-  ```bash
-  sbom upload --api-url https://api.example.com --api-key KEY \
-              --file sbom.cdx.json --auto-create \
-              --project-name MyApp --project-version 1.0.0
-  ```
+Set `SBOM_PROJECT_NAME=staging` in `.env.stage`. With a readable CycloneDX file and `SBOM_API_KEY` supplied by the shell or CI secret store, run:
 
-  ```bash
-  sbom delete --api-url https://api.example.com --api-key KEY \
-              --project-name MyApp --project-version 1.0.0
-  ```
+```bash
+SBOM_PROJECT_NAME=ci sbom --env-file .env.stage upload \
+  --file sbom.cdx.json --project-name api --auto-create
+```
 
-- Env Vars
-  > Environment variables have the second-highest precedence and will override settings from dotenv files, config files, and default variables.
-
-  ```bash
-  export SBOM_API_URL="https://api.example.com"
-  export SBOM_API_KEY="KEY"
-
-  sbom upload -f sbom.cdx.json
-  ```
-
-- DotEnv Files (`.env`)
-  > Dotenv files have lower precedence than environment variables and command-line flags but will override config files and default variables.
-
-  ```env
-  SBOM_API_URL=https://api.component-analysis.localhost/
-  SBOM_API_KEY=<API_KEY>
-  SBOM_VERIFY_SSL=true
-  SBOM_PARENT_NAME="Project"
-  SBOM_PROJECT_NAME="Dependency-Track"
-  SBOM_PROJECT_VERSION="4.13.2"
-  SBOM_IS_LATEST=true
-  SBOM_AUTO_CREATE=true
-  ```
-
-  ```bash
-  # Explicitly load a trusted dotenv file
-  sbom --env-file .env upload -f sbom.cdx.json
-  ```
-
-  ```bash
-  # Explicitly load a trusted dotenv file
-  sbom --env-file .env.stage upload -f sbom.cdx.json
-  ```
-
-- Project Configuration (`.sbom.yml`)
-  > Run the CLI from the project root to automatically load its `.sbom.yml`.
-  >
-  > Config files are read in the order: `/etc/sbom/config.yml`, `~/.sbom/config.yml`, then `.sbom.yml`, later files override earlier ones. CLI flags and environment variables override config files. Dotenv loading still requires `--env-file`.
-
-  ```yaml
-  api-url: https://api.example.com
-  api-key: YOUR_API_KEY
-  verify-ssl: true
-  project-name: MyApp
-  project-version: 1.0.0
-  ```
-
-  ```bash
-  cd /path/to/project
-  sbom upload --file sbom.cdx.json
-  sbom delete
-  ```
-
-### 1.4. Table of Comparison
-
-| Library        | CLI Flags | Env Vars | DotEnv Files | Config Files | Defaults | Native Precedence | Notes                     |
-| -------------- | --------- | -------- | ------------ | ------------ | -------- | ----------------- | ------------------------- |
-| Click          | &check;   | &check;  | &cross;      | Custom       | &check;  | Partial           | Config file via user code |
-| Typer          | &check;   | &check;  | &cross;      | Custom       | &check;  | Partial           | Built on Click            |
-| argparse       | &check;   | Custom   | &cross;      | Custom       | &check;  | Custom            | Standard library          |
-| python-fire    | &check;   | Custom   | &cross;      | Custom       | &check;  | Custom            | Auto CLI generation       |
-| configargparse | &check;   | &check;  | &check;      | &check;      | &check;  | &check;           | Explicit, recommended     |
-| Hydra          | &check;   | Limited  | &cross;      | &check;      | &check;  | &check;           | Hierarchical configs      |
-| dynaconf       | &check;   | &check;  | &cross;      | &check;      | &check;  | &check;           | Full-stack config mgmt    |
-
-## 2. References
-
-- [Command Line Interface (CLI)](https://clig.dev/) guide.
-- [Click](https://click.palletsprojects.com/) documentation.
-- [Typer](https://typer.tiangolo.com/) documentation.
-- [argparse](https://docs.python.org/3/library/argparse.html) documentation.
-- [python-fire](https://github.com/google/python-fire) documentation.
-- [configargparse](https://github.com/bw2/ConfigArgParse) documentation.
-- [Hydra](https://hydra.cc/docs/intro/) documentation.
-- [dynaconf](https://www.dynaconf.com/) documentation.
+This uploads to project `api`, version `1.0.0`. Omitting `--project-name api` selects `ci`. Removing that environment assignment as well selects `staging` if the shell has no exported `SBOM_PROJECT_NAME`. Omitting `--env-file .env.stage` too selects `baseline`.

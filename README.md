@@ -31,6 +31,9 @@ The SBOM tool provides a command-line interface (CLI) for managing Software Bill
 
 ### 1.2. Insights
 
+- [CLI reference](docs/cli.md) · [Documentation site](https://sentenz.github.io/sbom-cli/)
+  > Lists flags, environment variables, configuration keys, and defaults for each command.
+
 - [REST API](docs/rest-api.md)
   > Provides detailed information on the available REST API endpoints for managing SBOM files.
 
@@ -40,6 +43,16 @@ The SBOM tool provides a command-line interface (CLI) for managing Software Bill
 - [Upload Methods](docs/upload-methods.md)
   > Provides detailed instructions to upload SBOM files using the CLI.
 
+To rebuild the reference and preview the documentation from the repository root, run these commands in a Python 3.12 virtual environment.
+
+```bash
+python -m pip install -e '.[docs]'
+python scripts/generate_cli_docs.py
+zensical serve
+```
+
+Run `zensical build --clean --strict` to build the static files in `site/`. Commit `docs/cli.md` alongside changes to the parser. The Documentation workflow checks the generated reference on pull requests and deploys from `main`. For the first deployment, select **GitHub Actions** under **Settings → Pages → Build and deployment → Source**.
+
 ### 1.3. Configuration
 
 #### 1.3.1. Environment Variables
@@ -47,18 +60,7 @@ The SBOM tool provides a command-line interface (CLI) for managing Software Bill
 > [!IMPORTANT]
 > Use HTTPS (`verify_ssl=true`) in production to ensure secure communication with the Dependency-Track API.
 
-| Variable               | Example                              | Required       | Description                                                       |
-| ---------------------- | ------------------------------------ | -------------- | ----------------------------------------------------------------- |
-| `SBOM_API_URL`         | <https://dependency-track.localhost> | Yes            | The URL of the Dependency-Track API endpoint.                     |
-| `SBOM_API_KEY`         | odt_XLzlXuEi_...                     | Yes            | The API key for authenticating with the Dependency-Track API.     |
-| `SBOM_PROJECT_NAME`    | MyProject                            | If auto-create | The name of the project to which the BOM belongs.                 |
-| `SBOM_PROJECT_VERSION` | 1.0.0                                | If auto-create | The version of the project to which the BOM belongs.              |
-| `SBOM_PROJECT_UUID`    | 51cef167-...                         | If by UUID     | The UUID of the project to which the BOM belongs.                 |
-| `SBOM_VERIFY_SSL`      | true                                 | Optional       | Whether to verify the SSL certificate of the API endpoint.        |
-| `SBOM_AUTO_CREATE`     | true                                 | Optional       | Whether to automatically create the project if it does not exist. |
-| `SBOM_PARENT_UUID`     | 12345678-...                         | Optional       | The UUID of the parent project, if applicable.                    |
-| `SBOM_IS_LATEST`       | true                                 | Optional       | Whether this BOM should be marked as the latest for the project.  |
-| `SBOM_PROJECT_TAGS`    | production,critical                  | Optional       | Comma-separated list of tags to associate with the project.       |
+The [CLI reference](docs/cli.md) lists the environment bindings for each command. Supply `SBOM_API_KEY` through the shell or a CI secret. See [configuration precedence](docs/order-of-precedence.md) when the same option appears in several sources.
 
 #### 1.3.2. Constants
 

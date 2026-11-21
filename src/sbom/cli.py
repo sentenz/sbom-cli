@@ -201,31 +201,7 @@ def cmd_delete(args: argparse.Namespace) -> int:
 
 
 def create_parser() -> configargparse.ArgParser:
-    """Create the command-line parser with subcommands.
-
-    Global options (flags > environment variables > config files) include:
-    --api-url (required), --api-key (required), and --verify-ssl.
-
-    Subcommands:
-        upload:
-            --file (required): Path to the SBOM file.
-            --project-uuid: Existing project UUID.
-            --project-name: Project name for auto-create.
-            --project-version: Project version for auto-create.
-            --project-tags: Comma-separated tags.
-            --parent-name: Parent project name.
-            --parent-version: Parent project version.
-            --parent-uuid: Parent project UUID.
-            --is-latest: Mark as the latest version.
-            --auto-create: Create project if not present.
-        delete:
-            --project-uuid: Project UUID to delete.
-            --project-name: Project name to delete.
-            --project-version: Project version to delete.
-
-    Returns:
-        An initialized ArgParser.
-    """
+    """Build the root parser and its upload and delete subcommands."""
     parser = configargparse.ArgParser(
         prog=constants.APP_NAME,
         description=constants.APP_DESCRIPTION,
@@ -290,17 +266,19 @@ def create_parser() -> configargparse.ArgParser:
     upload_parser.add(
         "--project-uuid",
         env_var="SBOM_PROJECT_UUID",
-        help="Existing project UUID",
+        help=(
+            "Accepted by the parser only. Select the upload target by project name and version."
+        ),
     )
     upload_parser.add(
         "--project-name",
         env_var="SBOM_PROJECT_NAME",
-        help="Project name (for auto-create)",
+        help="Target project name (required with --auto-create)",
     )
     upload_parser.add(
         "--project-version",
         env_var="SBOM_PROJECT_VERSION",
-        help="Project version (for auto-create)",
+        help="Target project version (required with --auto-create)",
     )
     upload_parser.add(
         "--project-tags",
@@ -330,10 +308,7 @@ def create_parser() -> configargparse.ArgParser:
         "--auto-create",
         env_var="SBOM_AUTO_CREATE",
         action="store_true",
-        help=(
-            "Automatically create the project if it does not already "
-            "exist (default: true)"
-        ),
+        help="Create the project if it does not already exist (default: false)",
     )
 
     # ─── Delete Subcommand ─────────────────────────────────────────
