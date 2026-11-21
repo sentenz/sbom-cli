@@ -7,7 +7,6 @@ and that adapters are mounted for both http and https.
 
 from __future__ import annotations
 
-import pytest
 
 from sbom.resources import constants
 from sbom.utils import http

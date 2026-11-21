@@ -39,7 +39,9 @@ class TestCreateParser:
     def test_has_upload_and_delete_subcommands(self) -> None:
         parser = cli.create_parser()
         # Parsing an unknown subcommand should fail; known ones should not.
-        args = parser.parse_args(["upload", "-f", "x.json", "-u", "https://x", "-k", "k", "--parent-uuid", "u"])
+        args = parser.parse_args(
+            ["upload", "-f", "x.json", "-u", "https://x", "-k", "k", "--parent-uuid", "u"]
+        )
         assert args.command == "upload"
 
         args = parser.parse_args(["delete", "-u", "https://x", "-k", "k", "--project-uuid", "u"])

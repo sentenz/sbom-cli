@@ -1,10 +1,4 @@
-"""
-SBOM Client for Dependency-Track API
-
-This module provides a client for interacting with the Dependency-Track
-API to manage SBOMs. It uses a persistent requests.Session with a retry
-strategy for handling transient HTTP errors.
-"""
+"""Upload SBOMs and find or delete projects through the Dependency-Track API."""
 
 import base64
 import json
@@ -18,20 +12,15 @@ from sbom.utils import exceptions, http
 
 
 class Client:
-    """Client for interacting with a Dependency-Track API server.
+    """Represent a connection to a Dependency-Track server.
 
-    This client uses a persistent requests.Session with a retry strategy.
-    All methods raise custom exceptions to indicate failure. Logging is left
-    to the caller.
-
-    Args:
-        api_url: Base URL of the Dependency-Track server
-            (e.g., "https://dt.example.com").
-        api_key: API key for authentication with the Dependency-Track server.
-        verify_ssl: Whether to verify TLS certificates. Defaults to True.
-        timeout: Request timeout in seconds. Defaults to 30.0.
-        session: Optional pre-configured requests.Session. If not provided,
-            a retry-enabled session will be created.
+    Attributes:
+        base_url: Server URL with trailing slashes removed.
+        api_key: Credential used to authenticate API requests.
+        verify_ssl: Whether requests verify the server certificate.
+        timeout: Request timeout in seconds.
+        session: Session used for all API requests.
+        headers: Authentication headers copied into each request.
     """
 
     def __init__(
@@ -42,6 +31,18 @@ class Client:
         timeout: float = constants.DEFAULT_TIMEOUT_SECONDS,
         session: requests.Session | None = None,
     ) -> None:
+        """Configure an authenticated connection to Dependency-Track.
+
+        Args:
+            api_url: Base URL of the server.
+            api_key: API key issued by the server.
+            verify_ssl: Whether to verify the server certificate.
+            timeout: Request timeout in seconds.
+            session: Session to reuse. Omit to create one with retries.
+
+        Raises:
+            exceptions.ValidationError: The server URL or API key is empty.
+        """
         if not api_url:
             raise exceptions.ValidationError("`api_url` must be a non-empty string.")
         if not api_key:
@@ -75,8 +76,8 @@ class Client:
             files: File attachments for multipart uploads.
 
         Returns:
-            Parsed JSON response as a dictionary, or an empty dict if no
-            content.
+            The decoded JSON value, or an empty dictionary for an empty or
+            non-JSON response.
 
         Raises:
             exceptions.HTTPError: If the server returns a non-2xx status
@@ -136,14 +137,6 @@ class Client:
     ) -> dict:
         """Upload an SBOM file to Dependency-Track using the v5.x API.
 
-        The SBOM (Software Bill of Materials) file is read, base64-encoded,
-        and sent as a JSON payload via PUT to /api/v1/bom. The API expects
-        the BOM content to be base64-encoded in the JSON request body.
-
-        If ``auto_create`` is True, the server will create the project if it
-        does not already exist. Otherwise, specify a project UUID or
-        name+version.
-
         Args:
             bom_file: File-system path to the SBOM file to be uploaded.
             auto_create: If True, automatically create the project if needed.
@@ -153,18 +146,19 @@ class Client:
             project_tags: Comma-separated tags for the project.
             parent_name: Name of a parent project, if this SBOM is nested.
             parent_version: Version of the parent project.
-            parent_uuid: UUID of the parent project (overrides name/version).
+            parent_uuid: UUID of the parent project.
             is_latest: Mark this SBOM as the latest version for the project.
 
         Returns:
-            A dictionary containing the server's response JSON (e.g., an
-            upload token).
+            The decoded response, typically containing an upload token, or an
+            empty dictionary for an empty or non-JSON response.
 
         Raises:
             exceptions.ValidationError: If required parameters are missing or
                 invalid.
             OSError: If the SBOM file cannot be opened.
-            exceptions.HTTPError: If the server returns a non-2xx response.
+            exceptions.NotFoundError: If the upload endpoint returns HTTP 404.
+            exceptions.HTTPError: If the server returns another non-success status.
             exceptions.Error: If a network-level error occurs.
         """
         # Input validation
@@ -240,24 +234,21 @@ class Client:
         self._send_request(method="DELETE", endpoint=endpoint)
 
     def find_project(self, name: str, version: str) -> dict | None:
-        """Find a project by name and version.
-
-        Sends a GET to /api/v1/project with query parameters ``name`` and
-        ``version``. Requires exactly one exact match in the returned array.
-        Returns None if no project matches; rejects ambiguous results.
+        """Find a project by its exact name and version.
 
         Args:
-            name: Name of the project to look up.
-            version: Version of the project to look up.
+            name: Project name to match.
+            version: Project version to match.
 
         Returns:
-            The unique exact matching project, or None if none found.
+            The matching project, or None if no entry matches both fields.
 
         Raises:
-            exceptions.ValidationError: If ``name`` or ``version`` is empty.
-            exceptions.HTTPError: If the server returns a non-2xx response
-                (other than 404).
-            exceptions.Error: If a network-level error occurs.
+            exceptions.ValidationError: Either argument is empty, the response
+                is not a list of project records, or multiple records match.
+            exceptions.NotFoundError: The lookup endpoint returns HTTP 404.
+            exceptions.HTTPError: The server returns another non-success status.
+            exceptions.Error: The request fails at the network level.
         """
         if not name or not version:
             raise exceptions.ValidationError(

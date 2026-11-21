@@ -3,6 +3,9 @@
 pre-commit:
   parallel: true
   commands:
+    ruff:
+      glob: "*.{py,toml}"
+      run: make lint-ruff-check
     gitleaks:
       run: make sast-gitleaks-staged
       skip:

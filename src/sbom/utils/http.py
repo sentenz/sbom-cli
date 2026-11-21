@@ -1,4 +1,4 @@
-"""HTTP session helpers with retry support for the SBOM client."""
+"""Build HTTP sessions that retry transient Dependency-Track failures."""
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -18,10 +18,10 @@ def session_retries(
         total_retries: Total number of retry attempts before giving up.
         backoff_factor: Factor for exponential backoff between retries.
         status_forcelist: HTTP status codes that should trigger a retry.
-            Defaults to :data:`constants.HTTP_STATUS`.
+            An empty or omitted list uses the default retryable statuses.
 
     Returns:
-        A requests.Session configured to retry on the specified status codes.
+        A session with the retry policy mounted for HTTP and HTTPS.
     """
     session = requests.Session()
     status_forcelist = status_forcelist or constants.HTTP_STATUS

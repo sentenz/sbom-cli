@@ -1,4 +1,4 @@
-"""Environment configuration helpers for the SBOM CLI."""
+"""Load dotenv settings for the SBOM CLI."""
 
 from pathlib import Path
 
@@ -12,17 +12,15 @@ def load_environment(
     override: bool = False,
     verbose: bool = False,
 ) -> bool:
-    """
-    Load environment variables from a .env file if present.
+    """Load settings from a dotenv file into the process environment.
 
     Args:
-        dotenv_path: Path to .env file (default: looks for '.env' in the
-            current directory).
-        override: Whether to override existing environment variables
-        verbose: Enable verbose output from python-dotenv
+        dotenv_path: File to read, relative to the working directory or absolute.
+        override: Whether file values replace existing environment variables.
+        verbose: Whether to report a missing file.
 
     Returns:
-        True if loaded successfully, False otherwise
+        True if dotenv loading is enabled and the file contains entries.
     """
     return load_dotenv(
         dotenv_path=dotenv_path,

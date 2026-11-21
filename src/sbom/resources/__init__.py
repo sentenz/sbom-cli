@@ -1,8 +1,4 @@
-"""Resources package for SBOM CLI.
-
-Re-exports the public constants defined in :mod:`sbom.resources.constants`
-so callers can import them directly from the package.
-"""
+"""Expose shared API endpoints, request defaults, and CLI settings."""
 
 from sbom.resources.constants import (
     API_BASE_PATH,

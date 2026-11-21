@@ -39,7 +39,7 @@ jobs:
           artifacts_retention_days: "1"
           allow_failure: "false"
           before_task: make test-setup
-          task: make test-coverage
+          task: make lint-ruff-check test-coverage
           after_task: make test-teardown
 
   python-fuzz:

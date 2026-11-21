@@ -1,4 +1,4 @@
-"""Defining Python Constants for Code Maintainability."""
+"""Define the API paths, retry policy, and configuration defaults used by the CLI."""
 
 from http import HTTPMethod, HTTPStatus
 from typing import Final

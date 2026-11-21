@@ -46,7 +46,9 @@ class _RecordingSession:
 
 class TestClientInitFuzz:
     @given(
-        api_url=st.text(min_size=1, alphabet=st.characters(whitelist_categories=("L", "N", "P", "S"))),
+        api_url=st.text(
+            min_size=1, alphabet=st.characters(whitelist_categories=("L", "N", "P", "S"))
+        ),
         api_key=st.text(min_size=1),
     )
     @example(api_url="https://dt.example.com/", api_key="test-key")
