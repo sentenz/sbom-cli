@@ -1,110 +1,383 @@
 # ADR-001: Docstrings Style for Python
 
-This record proposes a convention for documenting the behavior of the SBOM client and CLI in Python source.
+Architectural Decision Records (ADR) on the docstring style and its automated enforcement for Python source code.
 
 - [1. State](#1-state)
 - [2. Context](#2-context)
 - [3. Decision](#3-decision)
-  - [3.1. Google-style docstrings](#31-google-style-docstrings)
+  - [3.1. Google Style](#31-google-style)
+  - [3.2. PEP 257 Baseline](#32-pep-257-baseline)
+  - [3.3. Ruff pydocstyle Rules](#33-ruff-pydocstyle-rules)
 - [4. Considered](#4-considered)
-  - [4.1. Google-style docstrings](#41-google-style-docstrings)
-  - [4.2. NumPy-style docstrings](#42-numpy-style-docstrings)
-  - [4.3. PEP 257 with free-form prose](#43-pep-257-with-free-form-prose)
+  - [4.1. PEP 257](#41-pep-257)
+  - [4.2. Google Style](#42-google-style)
+  - [4.3. NumPy Style](#43-numpy-style)
+  - [4.4. reStructuredText Style](#44-restructuredtext-style)
+  - [4.5. Ruff](#45-ruff)
+  - [4.6. pydoclint](#46-pydoclint)
 - [5. Consequences](#5-consequences)
 - [6. Implementation](#6-implementation)
 - [7. References](#7-references)
 
 ## 1. State
 
-- Author(s): Codex
+- Author(s): Sentenz
 - Date: 2026-11-21
 - Status: Proposed
 
 ## 2. Context
 
-The Python package serves two audiences. A caller of `Client.find_project` needs to know when a lookup returns `None` and when it raises an exception. A caller of a CLI command handler needs to know which failures become exit codes. Type annotations such as `dict | None` and `int` leave those distinctions open.
-
-The client, CLI handlers, and HTTP helpers already use `Args:`, `Returns:`, and `Raises:` where applicable. Summary placement varies, and the current `find_project` docstring does not identify duplicate exact matches as a cause of `ValidationError`. The repository's Ruff configuration selects `E`, `F`, `W`, and `C90`. Docstring rules are outside that selection.
+Python source code needs a single, explicit docstring convention. Without one, docstrings drift between formats (free text, reStructuredText field lists, Google sections, NumPy sections), reviews spend time on form instead of content, and tools that read docstrings (linters, API documentation generators, IDEs, AI coding agents) cannot rely on a consistent structure. Type annotations now carry parameter and return types, so the docstring convention must complement annotations instead of duplicating them.
 
 1. Decision Drivers
 
-    - Caller-visible behavior
-      > A reader should be able to handle meaningful outcomes from the docstring alone.
-    - Readability in source
-      > Summaries and section labels should be easy to scan in an editor or in Python's `help()` output.
-    - Cost of adoption
-      > Existing accurate descriptions should carry forward with minimal editing.
+    - Readability
+      > Docstrings must be easy to read in source code and in terminal help output, for short and long descriptions alike.
+
+    - Type Annotation Compatibility
+      > Types are declared once in annotations; the docstring must not require repeating them.
+
+    - Tool Support
+      > Linters, documentation generators, and IDEs must parse the style natively or through a maintained extension.
+
+    - Enforceability
+      > Conformance must be verifiable automatically in pre-commit and CI rather than relying on code review alone.
+
+    - Consistency
+      > One style applies across all Python code; mixing styles is not allowed.
+
+    - Low Maintenance Overhead
+      > The convention must avoid duplicated information that drifts out of sync with the code.
 
 ## 3. Decision
 
-### 3.1. Google-style docstrings
+The decision is a multiple selection of complementary options: Google style defines the docstring sections, PEP 257 defines the baseline structure, and Ruff enforces both.
 
-Use PEP 257 conventions with Google-style sections for public modules, classes, functions, and methods under `src/sbom/`. Apply the same format to private helpers when their behavior warrants a docstring.
+### 3.1. Google Style
 
-- Open with triple double quotes and a one-sentence summary ending in a period. Use an imperative verb for functions and methods. A simple contract can fit on one line. For longer docstrings, leave a blank line after the summary.
-- Use `Args:` for parameters that need explanation. Match signature names and order, omit `self` and `cls`, and describe constraints, units, or meaningful defaults. Keep type declarations in annotations. For classes such as `Client`, document constructor arguments once in the class docstring.
-- Use `Returns:` for meaningful results and `Yields:` for generator items. Explain the meaning of sentinels or exit codes. Omit a return section for a procedure that only returns `None`.
-- Use `Raises:` for caller-visible exceptions, pairing each exception with the condition that triggers it. When a CLI handler translates a failure into an exit code, describe the code under `Returns:`.
+Google style is the docstring format for all Python code. Sections are introduced by a heading line ending in a colon and use indentation instead of markup. Types are taken from annotations.
+
+| Element | Rule |
+| ------- | ---- |
+| Section headings | `Args:`, `Returns:`, `Yields:` (generators), `Raises:`, `Attributes:` |
+| Indentation | Section contents use a 4-space hanging indent |
+| Module | Starts with a docstring describing contents and usage |
+| Class | Summary of what an instance represents; public attributes listed under `Attributes:` |
+| Constructor | Parameters documented in the `__init__` docstring |
+| Function or method | Required for public API, non-trivial size, or non-obvious logic; list each parameter by name under `Args:` |
+| Types | Declared in annotations only; stated in the docstring only when no annotation exists |
+| `Raises:` | Lists exceptions that are part of the interface, not exceptions raised on API misuse |
+| Overrides | A method marked `@override` may omit its docstring unless it refines the base contract |
+| Tests | Module, class, and `test_` method docstrings are optional |
+
+```python
+class Client:
+    """A connection to a remote device.
+
+    Attributes:
+        host: Hostname or IP address of the device.
+        timeout: Seconds to wait for a response.
+    """
+
+    def __init__(self, host: str, timeout: float = 2.0) -> None:
+        """Initialize the client.
+
+        Args:
+            host: Hostname or IP address of the device.
+            timeout: Seconds to wait for a response.
+        """
+        self.host = host
+        self.timeout = timeout
+
+    def read_register(self, address: int, *, retries: int = 3) -> int:
+        """Read a holding register from the device.
+
+        Args:
+            address: Zero-based register address.
+            retries: Additional attempts after a failed read.
+
+        Returns:
+            The raw 16-bit register value.
+
+        Raises:
+            TimeoutError: If the device does not respond after all attempts.
+        """
+        ...
+```
 
 1. Rationale
 
-    - Familiar structure
-      > Keeping the labels already used by the client and CLI preserves useful descriptions and limits the migration to gaps and inconsistencies.
-    - Explicit outcomes
-      > Separate result and exception sections give callers a predictable place to look for each outcome.
+    - Readability
+      > Indentation-based sections read well in source and in `help()` output without underline or field-list markup.
+
+    - Type Annotation Compatibility
+      > Parameters are listed by name only, so annotations remain the single source of type information.
+
+    - Tool Support
+      > Sphinx (Napoleon), mkdocstrings (Griffe), and Ruff support the style directly.
+
+    - Enforceability
+      > Ruff's `google` convention enables the missing-parameter check (D417), which the `numpy` and `pep257` conventions leave disabled.
+
+    - Consistency
+      > Google's guide fills gaps this ADR does not cover, so contributors have one reference for edge cases.
+
+### 3.2. PEP 257 Baseline
+
+PEP 257 is the baseline for docstring structure and applies to every docstring, independent of the section format in 3.1.
+
+| Rule | Convention |
+| ---- | ---------- |
+| Quotes | Triple double quotes (`"""`) |
+| Summary line | One physical line, imperative mood ("Read", not "Reads"), ends with a period, does not restate the signature |
+| Structure | Blank line between summary and description; closing quotes on their own line for multi-line docstrings |
+| Coverage | Public modules, classes, functions, and methods, including `__init__`, have docstrings |
+| Content | Behavior, side effects, raised exceptions, and call restrictions; implementation details belong in code comments |
+
+Where Google's guide permits descriptive or imperative summary lines, imperative mood applies, as PEP 257 prescribes.
+
+1. Rationale
+
+    - Consistency
+      > One summary-line mood and one structure apply everywhere, instead of a per-file choice.
+
+    - Tool Support
+      > PEP 257 is the convention that docstring tools and the pydocstyle rule family implement.
+
+    - Low Maintenance Overhead
+      > Forbidding signature restatements removes information that changes with every refactoring.
+
+### 3.3. Ruff pydocstyle Rules
+
+Ruff enforces the docstring rules through its pydocstyle rule family (`D`) with `convention = "google"` set explicitly. The rules cover missing docstrings (D100 to D107), structure, and undocumented parameters (D417). Setting the convention explicitly avoids style auto-detection.
+
+1. Rationale
+
+    - Enforceability
+      > Violations fail pre-commit and CI, so the convention does not depend on reviewer attention.
+
+    - Tool Support
+      > The standalone pydocstyle project is deprecated in favor of Ruff, which supports the same rule family.
+
+    - Consistency
+      > An explicit convention applies the same rules to every repository using the shared configuration.
 
 ## 4. Considered
 
-### 4.1. Google-style docstrings
+### 4.1. PEP 257
 
-Short labels introduce indented descriptions of parameters, results, and exceptions. [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html#383-functions-and-methods)
-
-- Pros
-  - Low migration cost
-    > Most structured docstrings in the client and CLI already use these labels.
-- Cons
-  - Repetition
-    > Listing every obvious parameter can obscure the few constraints that affect a call.
-
-### 4.2. NumPy-style docstrings
-
-Underlined headings separate sections such as `Parameters` and `Returns`. [numpydoc style guide](https://numpydoc.readthedocs.io/en/latest/format.html)
+[PEP 257](https://peps.python.org/pep-0257/) standardizes the high-level structure of docstrings without defining section markup.
 
 - Pros
-  - Detailed parameter descriptions
-    > Separate entries provide room for units, shapes, or longer explanations.
+
+  - Official Python convention
+    > Tool-independent and understood by every Python developer.
+
+  - Minimal rules
+    > Low adoption cost and little to maintain.
+
 - Cons
-  - Conversion cost
-    > Existing sections would need rewriting, and typed parameter entries would duplicate information in the client signatures.
 
-### 4.3. PEP 257 with free-form prose
+  - No section syntax
+    > Parameters, return values, and exceptions are free-form text that tools cannot parse into structure.
 
-PEP 257 defines summary and layout conventions while leaving section markup open. [PEP 257](https://peps.python.org/pep-0257/)
+  - Weak enforcement
+    > Ruff's `pep257` convention leaves the missing-parameter check (D417) disabled.
+
+### 4.2. Google Style
+
+[Google Style](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) is the docstring format of the Google Python Style Guide, using indented `Args:`, `Returns:`, and `Raises:` sections.
 
 - Pros
-  - Concision
-    > A short paragraph suits a helper with a single straightforward effect.
+
+  - Readable for short docstrings
+    > Sphinx's Napoleon documentation rates the style as easier to read for short and simple docstrings.
+
+  - Types from annotations
+    > The guide asks for types in the docstring only when the code lacks an annotation.
+
+  - Broad tool support
+    > Supported by Sphinx Napoleon, Griffe and mkdocstrings, Ruff, and pydoclint.
+
+  - Missing-parameter check
+    > Ruff's `google` convention enables D417.
+
 - Cons
-  - Variable placement
-    > In a longer client method, readers must search the prose for each failure condition.
+
+  - Less suited to long docstrings
+    > NumPy style tends to be easier to read for long, in-depth descriptions such as algorithm notes.
+
+  - Whitespace-sensitive sections
+    > Griffe treats a section without the required blank line above it as plain text, so typos fail silently.
+
+  - Extension required in Sphinx
+    > Sphinx needs the Napoleon extension to parse the sections.
+
+### 4.3. NumPy Style
+
+[NumPy Style](https://numpydoc.readthedocs.io/en/latest/format.html) is the numpydoc docstring standard, with hyphen-underlined section headings in reStructuredText.
+
+- Pros
+
+  - Suited to long docstrings
+    > Underlined sections handle extended descriptions, notes, and mathematical content well.
+
+  - Established in scientific Python
+    > Mature standard with the numpydoc extension and parsers in Napoleon, Griffe, and Ruff.
+
+- Cons
+
+  - Vertical space
+    > Sections take more lines than the Google equivalent, which adds noise to short docstrings.
+
+  - Types repeated in docstrings
+    > Parameter entries pair a name with a type, which duplicates annotations and drifts.
+
+  - Missing-parameter check disabled
+    > Ruff's `numpy` convention leaves D417 disabled, so undocumented parameters go unreported.
+
+### 4.4. reStructuredText Style
+
+[reStructuredText Style](https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists) uses Sphinx field lists such as `:param name:`, `:type name:`, `:returns:`, and `:raises:`.
+
+- Pros
+
+  - Native to Sphinx
+    > No extension is required, and the full reStructuredText feature set is available.
+
+  - Parsed by Griffe and pydoclint
+    > Documentation and consistency tooling can read the field lists.
+
+- Cons
+
+  - Visually dense
+    > Napoleon exists because field lists are hard to read in source code.
+
+  - Duplicated type information
+    > `:type:` fields repeat what annotations already declare.
+
+  - No Ruff convention
+    > Ruff's pydocstyle conventions are `google`, `numpy`, and `pep257`, so a Sphinx-style convention is not available.
+
+### 4.5. Ruff
+
+[Ruff](https://docs.astral.sh/ruff/) is a Python linter and formatter that implements the pydocstyle rule family.
+
+- Pros
+
+  - Convention switch
+    > A single setting selects `google`, `numpy`, or `pep257` rule sets.
+
+  - Replaces pydocstyle
+    > The pydocstyle project is deprecated in favor of Ruff.
+
+  - Formatter integration
+    > Ruff's formatter can format code examples inside docstrings.
+
+- Cons
+
+  - Form only
+    > The rules verify structure and presence, not whether a docstring is accurate or useful.
+
+  - Detection without a convention
+    > Without an explicit convention, the section style is inferred heuristically, which can misclassify mixed docstrings.
+
+### 4.6. pydoclint
+
+[pydoclint](https://github.com/jsh9/pydoclint) checks that docstring sections match the function signature and implementation (arguments, returns, yields, raises).
+
+- Pros
+
+  - Signature consistency
+    > Detects documented parameters that do not exist, wrong order, and missing `Raises:` or `Yields:` sections.
+
+  - Multiple styles
+    > Supports Google, NumPy, and Sphinx styles.
+
+- Cons
+
+  - Preview in Ruff
+    > Ruff's pydoclint-derived `DOC` rules are documented as preview rules, so their behavior may change.
+
+  - Additional tool
+    > Standalone use adds a second docstring linter to the toolchain.
 
 ## 5. Consequences
 
 - Positive
-  - Predictable lookup
-    > A reader can find the distinction between an empty result and an HTTP error under the same headings across client methods.
+
+  - Single convention
+    > One docstring format and one set of structural rules apply to all Python code.
+
+  - Automated enforcement
+    > Missing docstrings, structure errors, and undocumented parameters fail in pre-commit and CI.
+
+  - Types declared once
+    > Annotations remain the only place types are written.
+
+  - Documentation tooling works out of the box
+    > Sphinx with Napoleon and mkdocstrings parse the sections without custom parsing.
+
 - Negative
-  - Mixed formatting during adoption
-    > Existing docstrings retain their current layout until the corresponding code is touched.
+
+  - Verbose for simple functions
+    > A multi-line docstring must describe every parameter to satisfy D417.
+
+  - Weaker fit for long, mathematical descriptions
+    > Extended algorithm documentation reads better in NumPy style and moves into the description body or separate documents.
+
+  - Form checks only
+    > Linting cannot judge accuracy or usefulness; code review remains necessary for content.
+
 - Risks
-  - Stale descriptions
-    > A well-formatted docstring can still describe the wrong behavior. Review changed contracts against the implementation and relevant tests, including delegated exceptions.
+
+  - Legacy docstrings in other styles
+    > They may be misparsed or ignored by section parsers; migrate them incrementally and keep the convention explicit.
+
+  - Silent section parsing failures
+    > A missing blank line before a section turns it into plain text; build the documentation in CI and review warnings.
+
+  - Tooling changes
+    > Ruff's `DOC` rules are in preview; revisit pydoclint-derived checks when they stabilize and record the change in a new ADR.
+
+  - Upstream guide drift
+    > This ADR is normative; the Google guide is a reference for unspecified cases and does not change the rules here.
 
 ## 6. Implementation
 
-1. Apply the convention when adding a public interface or changing its behavior. Update the affected docstring in the same change. Start with the public client methods and CLI handlers, where callers act on the outcome.
+1. Configure Ruff
 
-2. Use the following docstring for `Client.find_project` as a review example. A successful response with zero exact matches and an HTTP 404 have distinct outcomes.
+    Add the rules to `pyproject.toml` in every Python repository. The scope is all Python packages and scripts; generated and vendored code is excluded. The `docstring-code-format` setting is optional.
+
+    ```toml
+    [tool.ruff.lint]
+    extend-select = ["D"]
+
+    [tool.ruff.lint.pydocstyle]
+    convention = "google"
+
+    [tool.ruff.lint.per-file-ignores]
+    "tests/**" = ["D"]
+
+    [tool.ruff.format]
+    docstring-code-format = true
+    ```
+
+2. Migrate existing code
+
+    Baseline existing violations (for example with `ruff check --add-noqa`) and remove each suppression when its file is next changed. New and modified code must pass without suppressions.
+
+3. Enforce in pre-commit and CI
+
+    Run `ruff check` in the pre-commit configuration and in the CI pipeline so violations block merges.
+
+4. Align documentation generation
+
+    Where API documentation is generated, use Sphinx with `sphinx.ext.napoleon` or mkdocstrings-python with `docstring_style: google`, and treat section parsing warnings as build failures.
+
+5. Publish the convention
+
+    Reference this ADR from contributor guidelines and agent instructions so human and AI-generated code follow the same style.
 
     ```python
     """Find a project by its exact name and version.
@@ -125,15 +398,21 @@ PEP 257 defines summary and layout conventions while leaving section markup open
     """
     ```
 
-3. During review, compare parameter names with the signature and trace the documented results and exceptions through the method and its helpers. For the example above, check the lookup cases and the HTTP error cases in the client tests. Use code review for conformance under the current Ruff configuration.
+6. Validate
+
+    Confirm that `ruff check` passes, the documentation build reports no section parsing warnings, and code review verifies what linting cannot: imperative summary lines, accurate content, and no docstrings that only repeat the name.
 
 ## 7. References
 
-- [PEP 257 — Docstring Conventions](https://peps.python.org/pep-0257/)
-- [Google Python Style Guide — Functions and Methods](https://google.github.io/styleguide/pyguide.html#383-functions-and-methods)
-- [numpydoc style guide](https://numpydoc.readthedocs.io/en/latest/format.html)
-- [Client implementation](../../src/sbom/client.py)
-- [CLI handlers](../../src/sbom/cli.py)
-- [HTTP helpers](../../src/sbom/utils/http.py)
-- [Client unit tests](../../tests/unit/test_client.py)
-- [Ruff configuration](../../pyproject.toml)
+- PEP 257 [Docstring Conventions](https://peps.python.org/pep-0257/) page.
+- Google Python Style Guide [Comments and Docstrings](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) section.
+- numpydoc [style guide](https://numpydoc.readthedocs.io/en/latest/format.html) page.
+- Sphinx [Napoleon extension](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html) page.
+- Griffe [docstring parsers](https://mkdocstrings.github.io/griffe/reference/docstrings) page for mkdocstrings.
+- Ruff [undocumented-param (D417)](https://docs.astral.sh/ruff/rules/undocumented-param) rule page.
+- Ruff [docstring-missing-returns (DOC201)](https://docs.astral.sh/ruff/rules/docstring-missing-returns/) rule page.
+- Ruff FAQ on [NumPy and Google style docstrings](https://docs.astral.sh/ruff/faq/#does-ruff-support-numpy-or-google-style-docstrings) page.
+- pydocstyle [repository](https://github.com/PyCQA/pydocstyle) page.
+- pydoclint [repository](https://github.com/jsh9/pydoclint) page.
+- Sentenz [ADR agent skill](https://github.com/sentenz/skills/blob/main/skills/adr/SKILL.md) page.
+
