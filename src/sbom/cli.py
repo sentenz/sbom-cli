@@ -90,72 +90,6 @@ def cmd_upload(args: argparse.Namespace) -> int:
         return 1
 
 
-def _delete_selected_project(
-    client: Client, args: argparse.Namespace, logger: logging.Logger
-) -> int:
-    """Resolve the project selector, delete the project, and log its identity.
-
-    Args:
-        client: Authenticated Dependency-Track connection.
-        args: Project UUID or name and version from the delete subcommand.
-        logger: Destination for lookup and deletion events.
-
-    Returns:
-        Zero after deletion or one if the selector cannot identify a project.
-
-    Raises:
-        exceptions.ValidationError: The selectors conflict or the client rejects the lookup or UUID.
-        exceptions.Error: The lookup or deletion request fails.
-    """
-    if args.project_uuid:
-        if args.project_name or args.project_version:
-            raise exceptions.ValidationError(
-                "Specify either project UUID or name and version, not both."
-            )
-        client.delete_project(project_uuid=args.project_uuid)
-        logger.info("event=delete_success project_uuid=%s", args.project_uuid)
-        return 0
-
-    if args.project_name and args.project_version:
-        project = client.find_project(
-            name=args.project_name, version=args.project_version
-        )
-        if project is None:
-            logger.error(
-                "event=project_not_found name=%s version=%s",
-                args.project_name,
-                args.project_version,
-            )
-            return 1
-
-        project_uuid = project.get("uuid")
-        if not project_uuid:
-            logger.error(
-                "event=lookup_error "
-                'reason="Found project missing `uuid` field" '
-                "name=%s version=%s",
-                args.project_name,
-                args.project_version,
-            )
-            return 1
-
-        client.delete_project(project_uuid=project_uuid)
-        logger.info(
-            "event=delete_success name=%s version=%s uuid=%s",
-            args.project_name,
-            args.project_version,
-            project_uuid,
-        )
-        return 0
-
-    logger.error(
-        "event=invalid_arguments "
-        'reason="Either --project-uuid or both --project-name and '
-        "--project-version must be specified."
-    )
-    return 1
-
-
 def cmd_delete(args: argparse.Namespace) -> int:
     """Delete a project and log the result.
 
@@ -185,7 +119,53 @@ def cmd_delete(args: argparse.Namespace) -> int:
     )
 
     try:
-        return _delete_selected_project(client, args, logger)
+        if args.project_uuid:
+            if args.project_name or args.project_version:
+                raise exceptions.ValidationError(
+                    "Specify either project UUID or name and version, not both."
+                )
+            client.delete_project(project_uuid=args.project_uuid)
+            logger.info("event=delete_success project_uuid=%s", args.project_uuid)
+            return 0
+
+        if args.project_name and args.project_version:
+            project = client.find_project(
+                name=args.project_name, version=args.project_version
+            )
+            if project is None:
+                logger.error(
+                    "event=project_not_found name=%s version=%s",
+                    args.project_name,
+                    args.project_version,
+                )
+                return 1
+
+            project_uuid = project.get("uuid")
+            if not project_uuid:
+                logger.error(
+                    "event=lookup_error "
+                    'reason="Found project missing `uuid` field" '
+                    "name=%s version=%s",
+                    args.project_name,
+                    args.project_version,
+                )
+                return 1
+
+            client.delete_project(project_uuid=project_uuid)
+            logger.info(
+                "event=delete_success name=%s version=%s uuid=%s",
+                args.project_name,
+                args.project_version,
+                project_uuid,
+            )
+            return 0
+
+        logger.error(
+            "event=invalid_arguments "
+            'reason="Either --project-uuid or both --project-name and '
+            "--project-version must be specified."
+        )
+        return 1
 
     except exceptions.ValidationError as e:
         logger.error('event=validation_error error="%s"', e)
