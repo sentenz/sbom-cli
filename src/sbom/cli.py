@@ -1,8 +1,4 @@
-"""
-Command-line interface for the SBOM tool.
-This module provides the main entry point for the SBOM CLI,
-including command parsing, subcommand handling, and structured logging.
-"""
+"""Parse SBOM commands and report upload and deletion outcomes."""
 
 import argparse
 import logging
@@ -19,19 +15,17 @@ from sbom.utils import config, exceptions, log
 
 
 def cmd_upload(args: argparse.Namespace) -> int:
-    """Handle the 'upload' subcommand: upload an SBOM file.
-
-    Builds arguments for Client.upload_sbom, invokes it, and logs success
-    or failure with structured messages.
+    """Upload an SBOM and log the result.
 
     Args:
-        args: Parsed namespace from configargparse, containing api_url,
-            api_key, verify_ssl, file, project_uuid, project_name,
-            project_version, project_tags, parent_name, parent_version,
-            parent_uuid, is_latest, and auto_create.
+        args: Connection settings, SBOM path, and project metadata from the
+            upload subcommand.
 
     Returns:
-        Exit code: 0 on success, 1 on any failure.
+        Zero on success or one if the upload operation fails.
+
+    Raises:
+        exceptions.ValidationError: The server URL or API key is empty.
     """
     logger = logging.getLogger("cmd_upload")
     # XXX Warn about SSL verification being disabled
@@ -96,20 +90,84 @@ def cmd_upload(args: argparse.Namespace) -> int:
         return 1
 
 
-def cmd_delete(args: argparse.Namespace) -> int:
-    """Handle the 'delete' subcommand: delete a project (and its SBOM).
-
-    If only ``--project-uuid`` is provided, deletes by UUID. Otherwise, if both
-    ``--project-name`` and ``--project-version`` are provided, looks up the
-    project to obtain its UUID and then deletes it. Logs structured events.
+def _delete_selected_project(
+    client: Client, args: argparse.Namespace, logger: logging.Logger
+) -> int:
+    """Resolve the project selector, delete the project, and log its identity.
 
     Args:
-        args: Parsed namespace from configargparse, containing api_url,
-            api_key, verify_ssl, project_uuid, project_name, and
-            project_version.
+        client: Authenticated Dependency-Track connection.
+        args: Project UUID or name and version from the delete subcommand.
+        logger: Destination for lookup and deletion events.
 
     Returns:
-        Exit code: 0 on success, 1 on any failure.
+        Zero after deletion or one if the selector cannot identify a project.
+
+    Raises:
+        exceptions.ValidationError: The selectors conflict or the client rejects the lookup or UUID.
+        exceptions.Error: The lookup or deletion request fails.
+    """
+    if args.project_uuid:
+        if args.project_name or args.project_version:
+            raise exceptions.ValidationError(
+                "Specify either project UUID or name and version, not both."
+            )
+        client.delete_project(project_uuid=args.project_uuid)
+        logger.info("event=delete_success project_uuid=%s", args.project_uuid)
+        return 0
+
+    if args.project_name and args.project_version:
+        project = client.find_project(
+            name=args.project_name, version=args.project_version
+        )
+        if project is None:
+            logger.error(
+                "event=project_not_found name=%s version=%s",
+                args.project_name,
+                args.project_version,
+            )
+            return 1
+
+        project_uuid = project.get("uuid")
+        if not project_uuid:
+            logger.error(
+                "event=lookup_error "
+                'reason="Found project missing `uuid` field" '
+                "name=%s version=%s",
+                args.project_name,
+                args.project_version,
+            )
+            return 1
+
+        client.delete_project(project_uuid=project_uuid)
+        logger.info(
+            "event=delete_success name=%s version=%s uuid=%s",
+            args.project_name,
+            args.project_version,
+            project_uuid,
+        )
+        return 0
+
+    logger.error(
+        "event=invalid_arguments "
+        'reason="Either --project-uuid or both --project-name and '
+        "--project-version must be specified."
+    )
+    return 1
+
+
+def cmd_delete(args: argparse.Namespace) -> int:
+    """Delete a project and log the result.
+
+    Args:
+        args: Connection settings and either a project UUID or an exact name
+            and version from the delete subcommand.
+
+    Returns:
+        Zero on success or one if the delete operation fails.
+
+    Raises:
+        exceptions.ValidationError: The server URL or API key is empty.
     """
     logger = logging.getLogger("cmd_delete")
     # XXX Warn about SSL verification being disabled
@@ -127,53 +185,7 @@ def cmd_delete(args: argparse.Namespace) -> int:
     )
 
     try:
-        if args.project_uuid:
-            if args.project_name or args.project_version:
-                raise exceptions.ValidationError(
-                    "Specify either project UUID or name and version, not both."
-                )
-            client.delete_project(project_uuid=args.project_uuid)
-            logger.info("event=delete_success project_uuid=%s", args.project_uuid)
-            return 0
-
-        if args.project_name and args.project_version:
-            project = client.find_project(
-                name=args.project_name, version=args.project_version
-            )
-            if project is None:
-                logger.error(
-                    "event=project_not_found name=%s version=%s",
-                    args.project_name,
-                    args.project_version,
-                )
-                return 1
-
-            project_uuid = project.get("uuid")
-            if not project_uuid:
-                logger.error(
-                    "event=lookup_error "
-                    'reason="Found project missing `uuid` field" '
-                    "name=%s version=%s",
-                    args.project_name,
-                    args.project_version,
-                )
-                return 1
-
-            client.delete_project(project_uuid=project_uuid)
-            logger.info(
-                "event=delete_success name=%s version=%s uuid=%s",
-                args.project_name,
-                args.project_version,
-                project_uuid,
-            )
-            return 0
-
-        logger.error(
-            "event=invalid_arguments "
-            'reason="Either --project-uuid or both --project-name and '
-            "--project-version must be specified."
-        )
-        return 1
+        return _delete_selected_project(client, args, logger)
 
     except exceptions.ValidationError as e:
         logger.error('event=validation_error error="%s"', e)
@@ -201,30 +213,11 @@ def cmd_delete(args: argparse.Namespace) -> int:
 
 
 def create_parser() -> configargparse.ArgParser:
-    """Create the command-line parser with subcommands.
-
-    Global options (flags > environment variables > config files) include:
-    --api-url (required), --api-key (required), and --verify-ssl.
-
-    Subcommands:
-        upload:
-            --file (required): Path to the SBOM file.
-            --project-uuid: Existing project UUID.
-            --project-name: Project name for auto-create.
-            --project-version: Project version for auto-create.
-            --project-tags: Comma-separated tags.
-            --parent-name: Parent project name.
-            --parent-version: Parent project version.
-            --parent-uuid: Parent project UUID.
-            --is-latest: Mark as the latest version.
-            --auto-create: Create project if not present.
-        delete:
-            --project-uuid: Project UUID to delete.
-            --project-name: Project name to delete.
-            --project-version: Project version to delete.
+    """Build the parser for SBOM upload and project deletion.
 
     Returns:
-        An initialized ArgParser.
+        A parser that resolves command options from flags, environment
+        variables, and configuration files in descending priority.
     """
     parser = configargparse.ArgParser(
         prog=constants.APP_NAME,
@@ -364,12 +357,14 @@ def create_parser() -> configargparse.ArgParser:
 
 
 def main() -> None:
-    """Main entry point for the SBOM CLI.
+    """Run the selected SBOM command and exit with its status.
 
-    Parses arguments, configures logging, registers signal handlers, and
-    dispatches to the appropriate subcommand handler.
+    Configure logging, load an explicitly selected dotenv file, and handle
+    termination signals while dispatching the command.
+
+    Raises:
+        SystemExit: Argument parsing or command execution has finished.
     """
-
     log.setup()
 
     # Only an explicit CLI path may authorize loading environment settings.
@@ -386,7 +381,15 @@ def main() -> None:
 
     # Gracefully handle SIGINT and SIGTERM
     def _signal_handler(signum: int, frame: FrameType | None) -> None:
-        """Handle termination signals by logging and exiting."""
+        """Log the termination signal and exit with status one.
+
+        Args:
+            signum: Signal number received by the process.
+            frame: Interrupted stack frame supplied by the signal handler.
+
+        Raises:
+            SystemExit: The process received a termination signal.
+        """
         logger = logging.getLogger("main")
         logger.error("event=signal_received signal=%d", signum)
         sys.exit(1)

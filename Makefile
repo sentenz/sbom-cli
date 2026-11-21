@@ -125,7 +125,7 @@ lint-isort-fix:
 
 ## Run ruff to detect style violations and potential bugs
 lint-ruff-check:
-	ruff check src/sbom tests
+	$(PYTHON_VENV)/bin/ruff check .
 .PHONY: lint-ruff-check
 
 ## Perform static type checking with mypy on source code

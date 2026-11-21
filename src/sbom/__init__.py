@@ -1,14 +1,4 @@
-"""
-SBOM CLI - Software Bill of Materials Management Tool
-
-A command-line interface for managing SBOMs on OWASP Dependency-Track servers.
-
-Modules:
-    - client: Dependency-Track API client
-    - cli: Command-line interface
-    - resources: Constants and configuration
-    - utils: Utility functions (HTTP, config, logging, exceptions)
-"""
+"""Manage SBOMs on Dependency-Track through the client and CLI."""
 
 from sbom.resources import constants
 

@@ -1,8 +1,4 @@
-"""
-Main entry point for the SBOM CLI package.
-
-Enables running the CLI via: python -m sbom
-"""
+"""Run the SBOM command line with `python -m sbom.main`."""
 
 import sys
 

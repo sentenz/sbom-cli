@@ -1,4 +1,4 @@
-"""Utility modules for SBOM CLI."""
+"""Expose configuration, logging, HTTP session, and client error helpers."""
 
 from sbom.utils.config import load_environment
 from sbom.utils.exceptions import (

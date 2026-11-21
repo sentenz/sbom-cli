@@ -61,6 +61,8 @@ AI Agents are automated tools that assist in various development tasks such as c
       @agent <skill-name> <task-description>
       ```
 
+For Python changes, follow [ADR-001](docs/decisions/adr-001-docstrings-style-python.md) and run `make lint-ruff-check` after `make test-setup`.
+
 ## 2. Skills Manager
 
 ### 2.1. Skills CLI
