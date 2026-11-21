@@ -10,4 +10,4 @@
 
 ## 2. Python Docstrings
 
-Follow [ADR-001](docs/decisions/adr-001-docstrings-style-python.md) when writing or reviewing Python docstrings.
+Follow [ADR-001 for Python Docstrings Style](docs/decisions/adr-001-docstrings-style-python.md) when writing or reviewing Python docstrings.
