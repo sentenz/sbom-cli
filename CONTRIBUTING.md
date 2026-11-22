@@ -537,10 +537,9 @@ Software Supply Chain Security for identifying vulnerabilities in dependencies b
 
       The [documentation workflow](.github/workflows/docs.yml) uses the [Sentenz Zensical action](https://github.com/sentenz/actions/pull/159) and enables GitHub Flavored Markdown for GitHub Pages builds.
 
-    - Local Docker tasks
+    - Tasks
 
       ```bash
-      make docs-zensical-setup
       make docs-zensical-build
       make docs-zensical-serve
       ```
