@@ -13,6 +13,10 @@ permissions: {}
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: docs-build-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
     permissions:
       contents: read
     steps:
@@ -22,8 +26,9 @@ jobs:
           persist-credentials: false
 
       - name: Build and upload documentation
-        uses: sentenz/actions/zensical@c6ea241b975f0acf5d945a808030fbb361d0bae5 # 1.8.0
+        uses: sentenz/actions/zensical@a4341e2c5156d5414aa4e6b336fe670a117bfc40 # 1.8.1
         with:
+          flavor: gfm
           site-directory: public
 
       - name: Verify generated API reference and GFM
@@ -31,6 +36,7 @@ jobs:
 
   deploy:
     needs: build
+    timeout-minutes: 10
     if: >-
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
