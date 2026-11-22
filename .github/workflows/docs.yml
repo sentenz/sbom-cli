@@ -26,10 +26,9 @@ jobs:
           persist-credentials: false
 
       - name: Build and upload documentation
-        # Keep the project-specific GFM/Mkdocstrings renderer for generated API pages.
-        uses: sentenz/actions/zensical@65353eff8704ffdfea5f96624c6b64e0ea4d74d5 # merged flavor support, PR #161
+        uses: sentenz/actions/zensical@a4341e2c5156d5414aa4e6b336fe670a117bfc40 # 1.8.1
         with:
-          flavor: ''
+          flavor: gfm
           site-directory: public
 
       - name: Verify generated API reference and GFM
