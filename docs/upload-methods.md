@@ -1,4 +1,4 @@
-# Upload Methods
+# Invocation Methods
 
 Upload a CycloneDX SBOM to Dependency-Track from a local Python installation, a container, or a CI pipeline. Replace `https://dependency-track.example.com` with the HTTPS base URL of the Dependency-Track API as seen from the environment running the CLI.
 
