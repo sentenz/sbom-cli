@@ -517,7 +517,7 @@ sscs-verify: sscs-verify-image sscs-verify-sbom
 
 # ─── SAST Manager ────────────────────────────────────────────────────────────────────────────────
 
-SAST_SEMGREP_IMAGE ?= semgrep/semgrep:1.183.0@sha256:2e45517a85e13a9cca14a2a00df6bb48affd66b8ebfae1b0991cd57578362fb0
+SAST_SEMGREP_IMAGE ?= semgrep/semgrep:1.186.0@sha256:6e1b04340e60e910fbb4ddbf3c857ab0918f064417ad5ac530014ccb3cf8c8f1
 SAST_SEMGREP_ALIAS := docker run --rm -v "${PWD}:/workspace" -w /workspace "$(SAST_SEMGREP_IMAGE)"
 SAST_SEMGREP_FILES ?= .
 SAST_SEMGREP_FILTER = $(if $(strip $(SAST_SEMGREP_FILES)),$(SAST_SEMGREP_FILES),.)
@@ -729,7 +729,7 @@ sast-gitleaks-staged:
 	docker run --rm -v "${PWD}:/workspace" -w /workspace "$(SAST_IMAGE_GITLEAKS)" protect --redact --staged --source /workspace --report-format json --report-path logs/sast/gitleaks-protect.json 2>&1
 .PHONY: sast-gitleaks-staged
 
-SAST_IMAGE_TRUFFLEHOG ?= trufflesecurity/trufflehog:3.99.9@sha256:2ec535840f860aa27f11fee20222fb790326ecd66325c96bd49d02ec6af46eca
+SAST_IMAGE_TRUFFLEHOG ?= trufflesecurity/trufflehog:3.100.0@sha256:8fd07ea46a3f59583c4d50f006d8cf150530141b28969c3c34cc455cb9165a6b
 
 ## Scan local filesystem for leaked secrets using TruffleHog and generate a report
 sast-trufflehog-fs:
