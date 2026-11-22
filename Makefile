@@ -113,19 +113,29 @@ sbom-cli-delete:
 
 # ─── Documentation ───────────────────────────────────────────────────────────────────────────────
 
-## Install the documentation dependencies in the project virtual environment
-docs-setup: setup
-	@$(PYTHON_VENV)/bin/python -m pip install --quiet -e ".[docs]"
+# Match the official Zensical image pinned by sentenz/actions/zensical.
+DOCS_ZENSICAL_IMAGE ?= docker.io/zensical/zensical:0.1.0@sha256:a9512943ddf49c645fd3c0861e5347f9c889abe7f5fdaad05e047582b8069b70
+DOCS_PORT ?= 8000
+DOCS_ZENSICAL_RUN = docker run --rm --user "$(id -u):$(id -g)" \
+	--volume "$(CURDIR):/docs" --workdir /docs \
+	--env HOME=/tmp --env PYTHONDONTWRITEBYTECODE=1 --entrypoint /bin/sh
+
+## Pull the official digest-pinned Zensical image for documentation tasks
+docs-setup:
+	docker pull "$(DOCS_ZENSICAL_IMAGE)"
 .PHONY: docs-setup
 
-## Build the documentation into site/ and fail on warnings
+## Build documentation in the Zensical container with strict validation
 docs-build:
-	$(PYTHON_VENV)/bin/zensical build --clean --strict
+	$(DOCS_ZENSICAL_RUN) "$(DOCS_ZENSICAL_IMAGE)" -ec 'python -m pip install --user --disable-pip-version-check -r requirements-docs-base.txt && exec python -m zensical build --clean --strict'
 .PHONY: docs-build
 
-## Serve the documentation locally with live reload
+# Usage: make docs-serve [DOCS_PORT=8000]
+#
+## Serve the documentation from Docker at http://localhost:8000 with live reload
 docs-serve:
-	$(PYTHON_VENV)/bin/zensical serve
+	$(DOCS_ZENSICAL_RUN) --init --interactive --publish "127.0.0.1:$(DOCS_PORT):8000" \
+		"$(DOCS_ZENSICAL_IMAGE)" -ec 'python -m pip install --user --disable-pip-version-check -r requirements-docs-base.txt && exec python -m zensical serve --dev-addr 0.0.0.0:8000'
 .PHONY: docs-serve
 
 # ─── Analysis ────────────────────────────────────────────────────────────────────────────────────

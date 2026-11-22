@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Keep the Zensical CLI version supplied by the official container image.
+-e .
+mkdocstrings[python]==1.0.8
+mkdocstrings-python==2.0.11

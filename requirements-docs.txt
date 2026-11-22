@@ -1,7 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-# Keep the Zensical CLI supplied by the digest-pinned action image.
--e .
-mkdocstrings[python]==1.0.8
-mkdocstrings-python==2.0.11
+# Shared project and API-reference requirements for CI and local container builds.
+-r requirements-docs-base.txt
 # Install the GFM renderer dependencies mounted by sentenz/actions/zensical.
 -r /opt/zensical-extensions/requirements-gfm.txt
