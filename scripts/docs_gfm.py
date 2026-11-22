@@ -13,6 +13,14 @@ class ApiAwareGfmSource(GfmSource):
     """Keep generated API references in the Python-Markdown pipeline."""
 
     def run(self, lines):
+        """Preserve Mkdocstrings directives for the standard Markdown pipeline.
+
+        Args:
+            lines: Source Markdown lines.
+
+        Returns:
+            Source lines for API references, or GFM-preprocessed lines otherwise.
+        """
         self.is_reference = any(
             line.lstrip().startswith("::: sbom.")
             or line.strip() == "::: sbom"
@@ -27,6 +35,12 @@ class ApiAwareGfmTree(GfmTree):
     """Restore the standard inline processor on Mkdocstrings pages."""
 
     def __init__(self, md, original_inline):
+        """Retain the original inline processor for API reference pages.
+
+        Args:
+            md: Active Python-Markdown instance.
+            original_inline: Original inline tree processor to delegate to.
+        """
         super().__init__(md)
         self.original_inline = original_inline
 
@@ -36,6 +50,14 @@ class ApiAwareGfmTree(GfmTree):
         return self.original_inline.stashed_nodes
 
     def run(self, root):
+        """Render API references normally and other pages through GFM.
+
+        Args:
+            root: Parsed Markdown element tree.
+
+        Returns:
+            Processed element tree.
+        """
         if self.md.preprocessors["sentenz_gfm"].is_reference:
             return self.original_inline.run(root)
         return super().run(root)
@@ -45,6 +67,11 @@ class GfmExtension(Extension):
     """Apply the upstream GFM renderer only to non-reference pages."""
 
     def extendMarkdown(self, md):
+        """Register API-aware source and tree processors.
+
+        Args:
+            md: Active Python-Markdown instance to configure.
+        """
         original_inline = md.treeprocessors["inline"]
         md.preprocessors.register(ApiAwareGfmSource(md), "sentenz_gfm", 1000)
         md.treeprocessors.register(
