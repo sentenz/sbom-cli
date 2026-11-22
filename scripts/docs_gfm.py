@@ -11,7 +11,7 @@ import html5lib
 from html5lib.constants import unadjustForeignAttributes
 from markdown.extensions import Extension
 from markdown.preprocessors import Preprocessor
-from markdown.treeprocessors import Treeprocessor
+from markdown.treeprocessors import InlineProcessor, Treeprocessor
 
 
 def serialize_html(element):
@@ -128,12 +128,21 @@ class GfmExtension(Extension):
         Args:
             md: Active Python-Markdown instance to configure.
         """
-        original_inline = md.treeprocessors["inline"]
+        # With flavor=gfm, the bundled extension runs first. Its source
+        # capture would consume API directives before our preprocessor sees them.
+        if "sentenz_gfm" in md.preprocessors:
+            md.preprocessors.deregister("sentenz_gfm")
+            # Restore native inline processing for Mkdocstrings reference pages.
+            original_inline = InlineProcessor(md)
+        else:
+            original_inline = md.treeprocessors["inline"]
+
         md.preprocessors.register(ApiAwareGfmSource(md), "docs_gfm", 1000)
         md.treeprocessors.register(
             ApiAwareGfmTree(md, original_inline), "inline", 20
         )
-        md.treeprocessors.deregister("prettify")
+        if "prettify" in md.treeprocessors:
+            md.treeprocessors.deregister("prettify")
         md.output_formats = dict.fromkeys(md.output_formats, serialize_html)
 
 
