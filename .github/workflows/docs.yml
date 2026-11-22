@@ -27,12 +27,7 @@ jobs:
           printf '\n[project.markdown_extensions]\nsentenz_gfm = {}\n' >> zensical.toml
 
       - name: Build and upload documentation
-        uses: sentenz/actions/zensical@df49b0c43c42e78efe9caae720ba455dd9e07a2b
-        with:
-          requirements-file: requirements-docs.txt
-          tests-directory: ''
-          build-script: ''
-          site-directory: site
+        uses: sentenz/actions/zensical@c6ea241b975f0acf5d945a808030fbb361d0bae5 # 1.8.0
 
   deploy:
     needs: build

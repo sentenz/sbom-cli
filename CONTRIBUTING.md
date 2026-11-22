@@ -528,7 +528,7 @@ Software Supply Chain Security for identifying vulnerabilities in dependencies b
     - [zensical.toml](zensical.toml)
       > Site navigation, documentation plugins, and strict build settings.
 
-    - [requirements-docs-base.txt](requirements-docs-base.txt)
+    - [requirements-docs.txt](requirements-docs.txt)
       > Project and API-reference dependencies installed inside the container.
 
 2. Usage and Instructions

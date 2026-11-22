@@ -119,14 +119,14 @@ DOCS_ZENSICAL_PORT ?= 8000
 
 ## Build documentation in the Zensical container with strict validation
 docs-zensical-build:
-	$(DOCS_ZENSICAL_ALIAS) -ec 'python -m pip install --user --disable-pip-version-check -r requirements-docs-base.txt && exec python -m zensical build --clean --strict'
+	$(DOCS_ZENSICAL_ALIAS) -ec 'python -m pip install --user --disable-pip-version-check -r requirements-docs.txt && exec python -m zensical build --clean --strict'
 .PHONY: docs-zensical-build
 
 # Usage: make docs-zensical-serve [DOCS_ZENSICAL_PORT=8000]
 #
 ## Serve the documentation from Docker at http://localhost:8000 with live reload
 docs-zensical-serve:
-	$(DOCS_ZENSICAL_ALIAS) -ec 'python -m pip install --user --disable-pip-version-check -r requirements-docs-base.txt && exec python -m zensical serve --dev-addr 0.0.0.0:$(DOCS_ZENSICAL_PORT)'
+	$(DOCS_ZENSICAL_ALIAS) -ec 'python -m pip install --user --disable-pip-version-check -r requirements-docs.txt && exec python -m zensical serve --dev-addr 0.0.0.0:$(DOCS_ZENSICAL_PORT)'
 .PHONY: docs-zensical-serve
 
 # ─── Analysis ────────────────────────────────────────────────────────────────────────────────────
