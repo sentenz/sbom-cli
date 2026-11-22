@@ -540,9 +540,9 @@ Software Supply Chain Security for identifying vulnerabilities in dependencies b
     - Local Docker tasks
 
       ```bash
-      make docs-setup
-      make docs-build
-      make docs-serve
+      make docs-zensical-setup
+      make docs-zensical-build
+      make docs-zensical-serve
       ```
 
-      The build and preview commands run the official digest-pinned Zensical image without a local Python environment. They install the project dependencies inside the container, mount the working tree at `/docs`, and preserve generated-file ownership. `docs-build` writes to `site/`; `docs-serve` uses live reload at `http://localhost:8000`. Override the local port with `make docs-serve DOCS_PORT=8100`.
+      The build and preview commands run the official digest-pinned Zensical image without a local Python environment. They install the project dependencies inside the container, mount the working tree at `/docs`, and preserve generated-file ownership. `docs-zensical-build` writes to `site/`; `docs-zensical-serve` uses live reload at `http://localhost:8000`. Override the local port with `make docs-zensical-serve DOCS_PORT=8100`.

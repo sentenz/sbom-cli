@@ -113,30 +113,30 @@ sbom-cli-delete:
 
 # ─── Documentation ───────────────────────────────────────────────────────────────────────────────
 
-# Match the official Zensical image pinned by sentenz/actions/zensical.
 DOCS_ZENSICAL_IMAGE ?= docker.io/zensical/zensical:0.1.0@sha256:a9512943ddf49c645fd3c0861e5347f9c889abe7f5fdaad05e047582b8069b70
-DOCS_PORT ?= 8000
-DOCS_ZENSICAL_RUN = docker run --rm --user "$$(id -u):$$(id -g)" \
+DOCS_ALIAS = docker run --rm --user "$$(id -u):$$(id -g)" \
 	--volume "$(CURDIR):/docs" --workdir /docs \
-	--env HOME=/tmp --env PYTHONDONTWRITEBYTECODE=1 --entrypoint /bin/sh
+	--env HOME=/tmp --env PYTHONDONTWRITEBYTECODE=1 --entrypoint /bin/sh \
+	"$(DOCS_ZENSICAL_IMAGE)"
+DOCS_ZENSICAL_PORT ?= 8000
 
 ## Pull the official digest-pinned Zensical image for documentation tasks
-docs-setup:
+docs-zensical-setup:
 	docker pull "$(DOCS_ZENSICAL_IMAGE)"
-.PHONY: docs-setup
+.PHONY: docs-zensical-setup
 
 ## Build documentation in the Zensical container with strict validation
-docs-build:
-	$(DOCS_ZENSICAL_RUN) "$(DOCS_ZENSICAL_IMAGE)" -ec 'python -m pip install --user --disable-pip-version-check -r requirements-docs-base.txt && exec python -m zensical build --clean --strict'
-.PHONY: docs-build
+docs-zensical-build:
+	$(DOCS_ZENSICAL_ALIAS) -ec 'python -m pip install --user --disable-pip-version-check -r requirements-docs-base.txt && exec python -m zensical build --clean --strict'
+.PHONY: docs-zensical-build
 
-# Usage: make docs-serve [DOCS_PORT=8000]
+# Usage: make docs-zensical-serve [DOCS_ZENSICAL_PORT=8000]
 #
 ## Serve the documentation from Docker at http://localhost:8000 with live reload
-docs-serve:
-	$(DOCS_ZENSICAL_RUN) --init --interactive --publish "127.0.0.1:$(DOCS_PORT):8000" \
-		"$(DOCS_ZENSICAL_IMAGE)" -ec 'python -m pip install --user --disable-pip-version-check -r requirements-docs-base.txt && exec python -m zensical serve --dev-addr 0.0.0.0:8000'
-.PHONY: docs-serve
+docs-zensical-serve:
+	$(DOCS_ALIAS) --init --interactive --publish "127.0.0.1:$(DOCS_ZENSICAL_PORT):8000" \
+		-ec 'python -m pip install --user --disable-pip-version-check -r requirements-docs-base.txt && exec python -m zensical serve --dev-addr 0.0.0.0:$(DOCS_ZENSICAL_PORT)'
+.PHONY: docs-zensical-serve
 
 # ─── Analysis ────────────────────────────────────────────────────────────────────────────────────
 
