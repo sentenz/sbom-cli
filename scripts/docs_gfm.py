@@ -30,6 +30,11 @@ class ApiAwareGfmTree(GfmTree):
         super().__init__(md)
         self.original_inline = original_inline
 
+    @property
+    def stashed_nodes(self):
+        """Expose the original inline processor's HTML node stash."""
+        return self.original_inline.stashed_nodes
+
     def run(self, root):
         if self.md.preprocessors["sentenz_gfm"].is_reference:
             return self.original_inline.run(root)
