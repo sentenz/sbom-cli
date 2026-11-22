@@ -9,7 +9,9 @@
   "internalChecksFilter": "strict",
   "pinDigests": true,
   "separateMinorPatch": true,
-  "dependencyDashboard": true,
+  "dependencyDashboard": {
+    "enabled": true
+  },
   "prHourlyLimit": 2,
   "prConcurrentLimit": 10,
   "ignorePaths": [
