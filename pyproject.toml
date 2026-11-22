@@ -35,13 +35,13 @@ fuzz = [
 dev = [
   "pytest==9.2.0",
   "pytest-cov==7.1.0",
-  "hypothesis==6.170.14",
+  "hypothesis==6.170.15",
   "atheris==3.1.0",
   "isort==9.0.2",
   "black==26.10.1",
   "flake8==7.5.0",
   "mypy==2.4.1",
-  "ruff==0.17.3",
+  "ruff==0.17.5",
 ]
 
 [tool.pytest.ini_options]
