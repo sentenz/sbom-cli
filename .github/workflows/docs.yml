@@ -1,51 +1,55 @@
 # SPDX-License-Identifier: Apache-2.0
-
 name: Documentation
 
 on:
-  pull_request:
-    branches: [main]
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: "3.12"
+      # The renderer ships with the composite action. Keep local previews independent.
+      - name: Enable GitHub Flavored Markdown
+        run: |
+          printf '\n[project.markdown_extensions]\nsentenz_gfm = {}\n' >> zensical.toml
 
-      - name: Build guides and API reference
-        run: make docs-setup docs-build
-
-      - name: Upload Pages artifact
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+      - name: Build and upload documentation
+        uses: sentenz/actions/zensical@df49b0c43c42e78efe9caae720ba455dd9e07a2b
         with:
-          path: site/
+          requirements-file: requirements-docs.txt
+          tests-directory: ''
+          build-script: ''
+          site-directory: site
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     permissions:
       pages: write
       id-token: write
-    concurrency:
-      group: github-pages
-      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy documentation
+      - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

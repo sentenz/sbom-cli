@@ -1,5 +1,7 @@
 [project]
 site_name = "SBOM CLI"
+strict = true
+site_dir = "site"
 repo_url = "https://github.com/sentenz/sbom-cli"
 nav = [
   { Home = "index.md" },
