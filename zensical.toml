@@ -1,5 +1,7 @@
 [project]
 site_name = "SBOM CLI"
+strict = true
+site_dir = "public"
 repo_url = "https://github.com/sentenz/sbom-cli"
 nav = [
   { Home = "index.md" },
@@ -13,6 +15,9 @@ nav = [
     { "ADR-001 · Python docstrings" = "decisions/adr-001-docstrings-style-python.md" },
   ] },
 ]
+
+[project.markdown_extensions]
+sentenz_gfm = {}
 
 [project.plugins.mkdocstrings.handlers.python]
 paths = ["src"]

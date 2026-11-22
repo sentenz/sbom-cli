@@ -31,7 +31,7 @@ Contribution guidelines and project management tools.
   - [13.1. Trivy](#131-trivy)
 - [14. Documentation Generators](#14-documentation-generators)
   - [14.1. Doxygen](#141-doxygen)
-  - [14.2. MkDocs](#142-mkdocs)
+  - [14.2. Zensical](#142-zensical)
 
 ## 1. AI Agents
 
@@ -519,33 +519,29 @@ Software Supply Chain Security for identifying vulnerabilities in dependencies b
       make pages-doxygen-serve
       ```
 
-### 14.2. MkDocs
+### 14.2. Zensical
 
-[MkDocs](https://www.mkdocs.org/) is a Static Site Generator (SSG) designed for building project documentation using Markdown files.
+[Zensical](https://zensical.org/) generates the documentation site and Python API reference.
 
 1. Insights and Details
 
-    - [mkdocs.yml](mkdocs.yml)
-      > Configuration file for MkDocs specifying site settings, theme, plugins, and markdown extensions.
+    - [zensical.toml](zensical.toml)
+      > Site navigation, GFM Markdown rendering, documentation plugins, and strict build settings.
+
+    - [requirements-docs.txt](requirements-docs.txt)
+      > Project, API-reference, and GFM dependencies installed for local Docker builds.
 
 2. Usage and Instructions
 
     - CI/CD
 
-      ```yaml
-      uses: sentenz/actions/mkdocs@latest
-      ```
+      The [documentation workflow](.github/workflows/docs.yml) uses the [Sentenz Zensical action](https://github.com/sentenz/actions/releases/tag/1.8.0). GitHub Flavored Markdown is enabled in `zensical.toml` for both CI and local previews. In CI, the action supplies the renderer; local Docker tasks mount the pinned compatible copy from `zensical/extensions/`.
 
     - Tasks
 
       ```bash
-      make pages-mkdocs-setup
+      make docs-zensical-build
+      make docs-zensical-serve
       ```
 
-      ```bash
-      make pages-mkdocs-build
-      ```
-
-      ```bash
-      make pages-mkdocs-serve
-      ```
+      The build and preview commands run the official digest-pinned Zensical image without a local Python environment. They install the project and GFM dependencies inside the container, mount the working tree at `/docs`, and preserve generated-file ownership. `docs-zensical-build` writes to `public/`; `docs-zensical-serve` publishes live reload only on `http://localhost:8000`. Override the local port with `make docs-zensical-serve DOCS_ZENSICAL_PORT=8100`.
