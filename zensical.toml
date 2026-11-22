@@ -17,7 +17,7 @@ nav = [
 ]
 
 [project.markdown_extensions]
-sentenz_gfm = {}
+"sbom.docs_gfm" = {}
 
 [project.plugins.mkdocstrings.handlers.python]
 paths = ["src"]
