@@ -526,16 +526,16 @@ Software Supply Chain Security for identifying vulnerabilities in dependencies b
 1. Insights and Details
 
     - [zensical.toml](zensical.toml)
-      > Site navigation, documentation plugins, and strict build settings.
+      > Site navigation, GFM Markdown rendering, documentation plugins, and strict build settings.
 
     - [requirements-docs.txt](requirements-docs.txt)
-      > Project and API-reference dependencies installed inside the container.
+      > Project, API-reference, and GFM dependencies installed for local Docker builds.
 
 2. Usage and Instructions
 
     - CI/CD
 
-      The [documentation workflow](.github/workflows/docs.yml) uses the [Sentenz Zensical action](https://github.com/sentenz/actions/pull/159) and enables GitHub Flavored Markdown for GitHub Pages builds.
+      The [documentation workflow](.github/workflows/docs.yml) uses the [Sentenz Zensical action](https://github.com/sentenz/actions/releases/tag/1.8.0). GitHub Flavored Markdown is enabled in `zensical.toml` for both CI and local previews. In CI, the action supplies the renderer; local Docker tasks mount the pinned compatible copy from `zensical/extensions/`.
 
     - Tasks
 
@@ -544,4 +544,4 @@ Software Supply Chain Security for identifying vulnerabilities in dependencies b
       make docs-zensical-serve
       ```
 
-      The build and preview commands run the official digest-pinned Zensical image without a local Python environment. They install the project dependencies inside the container, mount the working tree at `/docs`, and preserve generated-file ownership. `docs-zensical-build` writes to `site/`; `docs-zensical-serve` uses live reload at `http://localhost:8000`. Override the local port with `make docs-zensical-serve DOCS_PORT=8100`.
+      The build and preview commands run the official digest-pinned Zensical image without a local Python environment. They install the project and GFM dependencies inside the container, mount the working tree at `/docs`, and preserve generated-file ownership. `docs-zensical-build` writes to `public/`; `docs-zensical-serve` publishes live reload only on `http://localhost:8000`. Override the local port with `make docs-zensical-serve DOCS_ZENSICAL_PORT=8100`.
