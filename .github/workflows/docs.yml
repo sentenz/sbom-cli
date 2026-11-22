@@ -21,13 +21,10 @@ jobs:
         with:
           persist-credentials: false
 
-      # The renderer ships with the composite action. Keep local previews independent.
-      - name: Enable GitHub Flavored Markdown
-        run: |
-          printf '\n[project.markdown_extensions]\nsentenz_gfm = {}\n' >> zensical.toml
-
       - name: Build and upload documentation
         uses: sentenz/actions/zensical@c6ea241b975f0acf5d945a808030fbb361d0bae5 # 1.8.0
+        with:
+          site-directory: public
 
   deploy:
     needs: build
