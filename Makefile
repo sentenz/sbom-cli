@@ -114,7 +114,7 @@ sbom-cli-delete:
 # ─── Documentation ───────────────────────────────────────────────────────────────────────────────
 
 DOCS_ZENSICAL_IMAGE ?= docker.io/zensical/zensical:0.1.0@sha256:a9512943ddf49c645fd3c0861e5347f9c889abe7f5fdaad05e047582b8069b70
-DOCS_ZENSICAL_RUN = docker run --rm --user "$$(id -u):$$(id -g)" --volume "$(CURDIR):/docs" --volume "$(CURDIR)/zensical/extensions:/opt/zensical-extensions:ro" --workdir /docs --env HOME=/tmp --env PYTHONDONTWRITEBYTECODE=1 --env PYTHONPATH=/opt/zensical-extensions --entrypoint /bin/sh
+DOCS_ZENSICAL_RUN = docker run --rm --user "$$(id -u):$$(id -g)" --volume "$(CURDIR):/docs" --workdir /docs --env HOME=/tmp --env PYTHONDONTWRITEBYTECODE=1 --entrypoint /bin/sh
 DOCS_ZENSICAL_PORT ?= 8000
 
 ## Build documentation in the Zensical container with strict validation

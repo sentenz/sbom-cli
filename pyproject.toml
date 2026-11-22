@@ -71,7 +71,5 @@ max-complexity = 15
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["D"]
-# Keep the upstream GFM renderer in sync with sentenz/actions 1.8.0.
-"zensical/extensions/sentenz_gfm.py" = ["D101", "D102", "D103"]
 
 [tool.mypy]

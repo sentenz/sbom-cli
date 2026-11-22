@@ -535,7 +535,7 @@ Software Supply Chain Security for identifying vulnerabilities in dependencies b
 
     - CI/CD
 
-      The [documentation workflow](.github/workflows/docs.yml) uses the [Sentenz Zensical action](https://github.com/sentenz/actions/releases/tag/1.8.0). GitHub Flavored Markdown is enabled in `zensical.toml` for both CI and local previews. In CI, the action supplies the renderer; local Docker tasks mount the pinned compatible copy from `zensical/extensions/`.
+      The [documentation workflow](.github/workflows/docs.yml) uses the [Sentenz Zensical action](https://github.com/sentenz/actions/releases/tag/1.8.0). GitHub Flavored Markdown is enabled in `zensical.toml` for both CI and local previews. The API-aware renderer is implemented in `scripts/docs_gfm.py` for both CI and local Docker tasks, without maintaining a separate vendored extension.
 
     - Tasks
 
