@@ -1,9 +1,9 @@
-# Order of Precedence
+# Configuration Precedence
 
 The [Command Line Interface (CLI)](https://clig.dev/) supports multiple configuration sources with a specific order of precedence.
 
 - [1. CLI](#1-cli)
-  - [1.1. Configuration File Precedence](#11-configuration-file-precedence)
+  - [1.1. Order of Precedence](#11-order-of-precedence)
   - [1.2. Supported Configuration Sources](#12-supported-configuration-sources)
   - [1.3. Examples and Explanation](#13-examples-and-explanation)
   - [1.4. Table of Comparison](#14-table-of-comparison)
@@ -11,7 +11,7 @@ The [Command Line Interface (CLI)](https://clig.dev/) supports multiple configur
 
 ## 1. CLI
 
-### 1.1. Configuration File Precedence
+### 1.1. Order of Precedence
 
 > [!NOTE]
 > The SBOM CLI supports multiple configuration sources in order of priority (highest → lowest).
