@@ -31,7 +31,7 @@ Contribution guidelines and project management tools.
   - [13.1. Trivy](#131-trivy)
 - [14. Documentation Generators](#14-documentation-generators)
   - [14.1. Doxygen](#141-doxygen)
-  - [14.2. MkDocs](#142-mkdocs)
+  - [14.2. Zensical](#142-zensical)
 
 ## 1. AI Agents
 
@@ -519,33 +519,30 @@ Software Supply Chain Security for identifying vulnerabilities in dependencies b
       make pages-doxygen-serve
       ```
 
-### 14.2. MkDocs
+### 14.2. Zensical
 
-[MkDocs](https://www.mkdocs.org/) is a Static Site Generator (SSG) designed for building project documentation using Markdown files.
+[Zensical](https://zensical.org/) generates the documentation site and Python API reference.
 
 1. Insights and Details
 
-    - [mkdocs.yml](mkdocs.yml)
-      > Configuration file for MkDocs specifying site settings, theme, plugins, and markdown extensions.
+    - [zensical.toml](zensical.toml)
+      > Site navigation, documentation plugins, and strict build settings.
+
+    - [requirements-docs-base.txt](requirements-docs-base.txt)
+      > Project and API-reference dependencies installed inside the container.
 
 2. Usage and Instructions
 
     - CI/CD
 
-      ```yaml
-      uses: sentenz/actions/mkdocs@latest
-      ```
+      The [documentation workflow](.github/workflows/docs.yml) uses the [Sentenz Zensical action](https://github.com/sentenz/actions/pull/159) and enables GitHub Flavored Markdown for GitHub Pages builds.
 
-    - Tasks
+    - Local Docker tasks
 
       ```bash
-      make pages-mkdocs-setup
+      make docs-setup
+      make docs-build
+      make docs-serve
       ```
 
-      ```bash
-      make pages-mkdocs-build
-      ```
-
-      ```bash
-      make pages-mkdocs-serve
-      ```
+      The build and preview commands run the official digest-pinned Zensical image without a local Python environment. They install the project dependencies inside the container, mount the working tree at `/docs`, and preserve generated-file ownership. `docs-build` writes to `site/`; `docs-serve` uses live reload at `http://localhost:8000`. Override the local port with `make docs-serve DOCS_PORT=8100`.
