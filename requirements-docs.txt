@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
-# Local builds use the same GFM dependency pins as sentenz/actions/zensical 1.8.0.
+# Local builds use the GFM renderer pins from the reusable Zensical action.
+# Mkdocstrings dependencies also support the project's API-aware renderer.
 mkdocstrings[python]==1.0.8
 mkdocstrings-python==2.0.11
 comrak==0.0.16
