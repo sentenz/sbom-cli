@@ -16,6 +16,9 @@ nav = [
   ] },
 ]
 
+[project.markdown_extensions]
+sentenz_gfm = {}
+
 [project.plugins.mkdocstrings.handlers.python]
 paths = ["src"]
 
