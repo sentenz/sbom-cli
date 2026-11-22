@@ -26,6 +26,9 @@ jobs:
         with:
           site-directory: public
 
+      - name: Verify generated API reference and GFM
+        run: python3 -m unittest discover -s tests/docs -v
+
   deploy:
     needs: build
     if: >-
