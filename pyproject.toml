@@ -10,7 +10,7 @@ readme = "README.md"
 license = { text = "Proprietary" }
 requires-python = ">=3.10"
 dependencies = [
-  "configargparse==1.9.0",
+  "configargparse==1.10.1",
   "requests==2.34.2",
   "types-requests==2.33.0.20261030",
   "urllib3==2.8.0",
