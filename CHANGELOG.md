@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.6](https://github.com/sentenz/sbom-cli/compare/v1.0.5...v1.0.6) (2026-11-23)
+
+### Bug Fixes
+
+* **deps:** update dependency configargparse to v1.10.1 ([#31](https://github.com/sentenz/sbom-cli/issues/31)) ([954eca8](https://github.com/sentenz/sbom-cli/commit/954eca8fa5680f2abcdcf6b4c63f05602945d0ef))
+* **deps:** update docker/dockerfile docker tag to v1.29 ([#32](https://github.com/sentenz/sbom-cli/issues/32)) ([dddc54e](https://github.com/sentenz/sbom-cli/commit/dddc54e0b3bdcd71f5cbe14e9316921d61b8c234))
+
 ## [1.0.5](https://github.com/sentenz/sbom-cli/compare/v1.0.4...v1.0.5) (2026-11-19)
 
 ### Bug Fixes
